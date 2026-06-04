@@ -18,7 +18,6 @@ This project predicts Singapore's next-day electricity demand in MWh using histo
 electricity-demand/
 ├── singapore_energy_forecast.ipynb    # Main Jupyter Notebook (Complete Pipeline)
 ├── README.md                           # This file
-└── energy_demand_forecast_outline.docx # Original project outline
 ```
 
 ---
