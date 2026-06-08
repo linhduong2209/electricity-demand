@@ -39,7 +39,6 @@ Line plots for Daily Electricity Demand, Mean Temperature, and Maximum Humidity 
 - **Temperature Correlation:** There is a visible positive correlation between mean temperature and electricity demand. Peaks in temperature often align with peaks in energy consumption (likely due to air conditioning load).
 - **Humidity:** Humidity remains relatively high and stable throughout the year, but spikes in humidity also appear to correlate with slight increases in demand.
 
-![[Screenshot 2026-06-07 181951.png]]
 ### 3.2 Correlation Analysis & Weather-Demand Relationship
 
 #### 3.2.1 Heatmap
