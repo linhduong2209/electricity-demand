@@ -1,0 +1,8 @@
+best_mae: 1324.208791548193
+best_model: linear
+best_r2: 0.9289139752151875
+best_rmse: 1706.411662667598
+date_range: 2023-01-02 00:00:00 to 2025-12-31 00:00:00
+features: 24
+test_samples: 212
+train_samples: 848

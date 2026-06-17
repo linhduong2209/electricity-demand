@@ -14,14 +14,6 @@ import pandas as pd
 
 
 def parse_weekly_xls(path: pathlib.Path) -> pd.DataFrame:
-    """
-    Parse one EMA weekly XLS → DataFrame[date, demand_mwh].
-
-    Layout:
-      Row 1 : dates at cols 1, 4, 7, 10, 13, 16, 19
-      Row 5+: 48 half-hourly MW readings per day
-    Daily MWh = sum(MW readings) × 0.5
-    """
     df = pd.read_excel(BytesIO(path.read_bytes()), engine="xlrd", header=None)
 
     date_cols = list(range(1, df.shape[1], 3))
@@ -102,10 +94,7 @@ def build_csv(root: str, output_csv: str = "ema_daily_demand.csv") -> pd.DataFra
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(0)
-
-    src = sys.argv[1]
-    out = sys.argv[2] if len(sys.argv) > 2 else "ema_daily_demand.csv"
-    build_csv(src, out)
+    PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
+    SRC_DIR = str(PROJECT_ROOT / "data")
+    OUT_CSV = str(PROJECT_ROOT / "ema_daily_demand.csv")
+    build_csv(SRC_DIR, OUT_CSV)

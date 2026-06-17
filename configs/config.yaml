@@ -1,0 +1,172 @@
+# Configuration File for Singapore Energy Demand Forecast
+# =========================================================
+
+# [1] DATA CONFIGURATION
+data:
+  # Input CSV file path (relative or absolute)
+  # Note: CSV file is currently in the project root
+  demand_csv_path: "./ema_daily_demand.csv"
+
+  # Weather data parameters
+  weather:
+    start_date: "2023-01-02"
+    end_date: "2025-12-31"
+    latitude: 1.3521 # Singapore
+    longitude: 103.8198 # Singapore
+
+  # Singapore coordinates for reference
+  location: "Singapore (1.3521°N, 103.8198°E)"
+
+# [2] PREPROCESSING CONFIGURATION
+preprocessing:
+  # Temporal features
+  temporal_features:
+    include_holidays: true
+    include_weekend: true
+    include_day_of_week: true
+    include_month: true
+    include_week_number: true
+
+  # Lag features (historical values)
+  lag_periods: [1, 7] # 1-day lag and 7-day lag
+
+  # Rolling features (moving averages)
+  rolling_windows: [3, 7, 30]
+
+  # Interaction features
+  include_interaction: true
+
+# [3] TRAIN/TEST SPLIT CONFIGURATION
+train_test_split:
+  # Chronological split ratio
+  train_ratio: 0.8
+  # 0.8 = 80% train, 20% test
+  # This ensures no forward-looking bias in time-series
+
+# [4] FEATURE SCALING
+scaling:
+  # StandardScaler for numerical stability
+  method: "standard" # "standard" or "minmax"
+  apply_to_all_models: true
+
+# [5] MODEL CONFIGURATION
+models:
+  # Which models to train?
+  train_models:
+    - "baseline" # Lag-1 baseline
+    - "linear" # Linear Regression
+    - "rf" # Random Forest
+    - "xgb" # XGBoost
+    - "catboost" # CatBoost
+    - "catboost_ppso" # CatBoost with PPSO optimization
+
+  # Baseline Model
+  baseline:
+    type: "baseline"
+    description: "Predict today = yesterday's demand (Lag-1)"
+
+  # Linear Regression
+  linear:
+    type: "linear"
+    description: "Linear model for baseline comparison"
+
+  # Random Forest
+  random_forest:
+    type: "rf"
+    n_estimators: 100
+    max_depth: 15
+    min_samples_split: 5
+    random_state: 42
+    n_jobs: -1
+
+  # XGBoost
+  xgboost:
+    type: "xgb"
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.05
+    random_state: 42
+
+  # CatBoost
+  catboost:
+    type: "catboost"
+    iterations: 200
+    depth: 6
+    learning_rate: 0.05
+    random_seed: 42
+    verbose: 0
+
+  # CatBoost with PPSO Optimization
+  catboost_ppso:
+    type: "catboost_ppso"
+    # PPSO hyperparameter bounds
+    param_bounds:
+      iterations: [100, 800] # Number of trees
+      depth: [4, 10] # Tree depth
+      learning_rate: [0.005, 0.3] # Learning rate
+      l2_leaf_reg: [1.0, 20.0] # L2 regularization
+
+    # PPSO settings
+    particles: 35
+    max_iterations: 60
+    early_stopping_rounds: 10 # Stop if no improvement for N iterations (prevents overfitting)
+
+# [6] HYPERPARAMETER TUNING
+hyperparameter_tuning:
+  # Method: "grid" or "random"
+  method: "grid"
+
+  # Cross-validation splits (for time-series aware CV)
+  cv_splits: 3
+
+  # Scoring metric
+  scoring: "neg_mean_absolute_error"
+
+# [7] TRAINING
+training:
+  batch_size: null # null = full batch
+  epochs: 1 # Single pass for tree-based models
+  early_stopping: true
+  patience: 20 # Early stopping rounds
+
+# [8] EVALUATION
+evaluation:
+  # Metrics to compute
+  regression_metrics:
+    - "MAE"
+    - "RMSE"
+    - "R2"
+    - "MAPE"
+    - "RAE"
+    - "WI"
+
+  # Visualization settings
+  plot_leaderboard: true
+  plot_predictions: true
+  plot_residuals: true
+  plot_feature_importance: true
+  top_features: 15 # Number of features to display
+
+# [9] OUTPUT CONFIGURATION
+output:
+  # Directory structure
+  models_dir: "./models"
+  results_dir: "./results"
+  plots_dir: "./results/plots"
+
+  # Save model artifacts
+  save_models: true
+  save_scaler: true
+  save_metrics: true
+
+  # Logging
+  log_level: "INFO"
+  log_file: "./results/training.log"
+
+# [10] PREDICTION CONFIGURATION
+prediction:
+  # Future prediction modes
+  mode: "historical" # "historical", "tomorrow", "forecast"
+  # historical: Predict for dates in training data (for testing)
+  # tomorrow: Predict next day using live weather
+  # forecast: Predict next 16 days using weather forecast API
