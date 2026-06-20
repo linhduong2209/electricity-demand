@@ -73,7 +73,7 @@ models:
   # Random Forest
   random_forest:
     type: "rf"
-    n_estimators: 100
+    n_estimators: 500
     max_depth: 15
     min_samples_split: 5
     random_state: 42
@@ -82,7 +82,7 @@ models:
   # XGBoost
   xgboost:
     type: "xgb"
-    n_estimators: 200
+    n_estimators: 800
     max_depth: 6
     learning_rate: 0.05
     random_state: 42
@@ -90,7 +90,7 @@ models:
   # CatBoost
   catboost:
     type: "catboost"
-    iterations: 200
+    iterations: 500
     depth: 6
     learning_rate: 0.05
     random_seed: 42
@@ -103,12 +103,12 @@ models:
     param_bounds:
       iterations: [100, 800] # Number of trees
       depth: [4, 10] # Tree depth
-      learning_rate: [0.005, 0.3] # Learning rate
-      l2_leaf_reg: [1.0, 20.0] # L2 regularization
+      learning_rate: [0.01, 0.2] # Learning rate
+      l2_leaf_reg: [1.0, 15.0] # L2 regularization
 
     # PPSO settings
-    particles: 35
-    max_iterations: 60
+    particles: 50
+    max_iterations: 100
     early_stopping_rounds: 10 # Stop if no improvement for N iterations (prevents overfitting)
 
 # [6] HYPERPARAMETER TUNING
@@ -117,7 +117,7 @@ hyperparameter_tuning:
   method: "grid"
 
   # Cross-validation splits (for time-series aware CV)
-  cv_splits: 3
+  cv_splits: 5
 
   # Scoring metric
   scoring: "neg_mean_absolute_error"
