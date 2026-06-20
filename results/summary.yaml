@@ -1,8 +1,8 @@
-best_mae: 1324.208791548193
-best_model: linear
-best_r2: 0.9289139752151875
-best_rmse: 1706.411662667598
-date_range: 2023-01-02 00:00:00 to 2025-12-31 00:00:00
-features: 24
-test_samples: 212
-train_samples: 848
+best_mae: 1520.1968288632172
+best_model: catboost_ppso
+best_r2: 0.911066038809608
+best_rmse: 1922.1205350181324
+date_range: 2023-02-01 to 2025-12-31
+features: 16
+test_samples: 213
+train_samples: 852

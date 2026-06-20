@@ -3,40 +3,33 @@
 Main Entry Point - Singapore Energy Demand Forecast Pipeline
 =============================================================
 
-Complete ML pipeline:
-1. Data Loading (weather + demand)
-2. Preprocessing (feature engineering)
-3. Train/Test Split
-4. Model Training & Tuning
-5. Evaluation & Visualization
+Complete ML pipeline based on CatBoost-PPSO paper method:
+1. Data Loading (weather from Open-Meteo + demand)
+2. Preprocessing & Feature Engineering (CCI, Season, Lags, Rolling windows)
+3. Train/Test Split (Time-series chronological split)
+4. Model Training & Hyperparameter Tuning (including PPSO)
+5. Evaluation & Saving Summary
 
 Usage:
     python main.py
-
-Author: Energy Forecast Team
-Date: 2024
 """
 
-import sys
 import os
+import sys
 import logging
 import yaml
 import pandas as pd
 import numpy as np
 
-# Add src directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from data_loader import load_all_data
 from preprocessing import DataPreprocessor, prepare_train_test_split
-from model import (
-    BaselineModel, StandardScalerWrapper, CatBoostPPSOModel,
-    create_model
-)
+from model import create_model
 from trainer import ModelTrainer
 from evaluator import RegressionEvaluator, FeatureImportanceVisualizer
+from visualizer import run_eda
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -45,262 +38,199 @@ logger = logging.getLogger(__name__)
 
 
 def load_config(config_path: str = "configs/config.yaml") -> dict:
-    """
-    Load configuration from YAML file.
-    
-    Args:
-        config_path (str): Path to config file
-    
-    Returns:
-        dict: Configuration dictionary
-    """
     if not os.path.exists(config_path):
-        logger.error(f"Config file not found: {config_path}")
-        sys.exit(1)
-    
-    with open(config_path, 'r') as f:
+        if os.path.exists("config.yaml"):
+            config_path = "config.yaml"
+        else:
+            logger.error(f"Config file not found: {config_path}")
+            sys.exit(1)
+            
+    with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
-    
     logger.info(f"✓ Configuration loaded from {config_path}")
     return config
 
 
-def create_output_directories(config: dict):
-    """Create necessary output directories."""
-    dirs = [
-        config['output']['models_dir'],
-        config['output']['results_dir'],
-        config['output']['plots_dir']
-    ]
-    for dir_path in dirs:
-        os.makedirs(dir_path, exist_ok=True)
-    logger.info("✓ Output directories created")
-
-
 def main():
-    """
-    Main pipeline execution.
+    print("="*70)
+    print("STARTING ENERGY DEMAND FORECAST PIPELINE".center(70))
+    print("="*70)
+
+    # ========== STEP 1: Config ==========
+    config = load_config()
     
-    Steps:
-    1. Load configuration
-    2. Load and preprocess data
-    3. Train multiple models
-    4. Evaluate and compare
-    5. Save results and models
-    """
-    
-    print("\n" + "="*70)
-    print("SINGAPORE ENERGY DEMAND FORECAST - ML PIPELINE".center(70))
-    print("="*70 + "\n")
-    
-    # ========== STEP 1: Load Configuration ==========
-    logger.info("STEP 1: Loading Configuration...")
-    config = load_config("configs/config.yaml")
-    create_output_directories(config)
-    
-    # ========== STEP 2: Load Data ==========
+    os.makedirs(config['output']['models_dir'], exist_ok=True)
+    os.makedirs(config['output']['results_dir'], exist_ok=True)
+    os.makedirs(config['output']['plots_dir'], exist_ok=True)
+
+    # ========== STEP 2: Data Loading ==========
     logger.info("\nSTEP 2: Loading Data...")
     demand_csv = config['data']['demand_csv_path']
+    weather_cfg = config['data']['weather']
     
-    df, load_stats = load_all_data(
+    df, data_stats = load_all_data(
         demand_csv_path=demand_csv,
-        start_date=config['data']['weather']['start_date'],
-        end_date=config['data']['weather']['end_date']
+        start_date=weather_cfg['start_date'],
+        end_date=weather_cfg['end_date'],
+        latitude=weather_cfg['latitude'],
+        longitude=weather_cfg['longitude']
     )
     
-    logger.info(f"Dataset: {df.shape[0]} rows, {df.shape[1]} columns")
-    logger.info(f"Date range: {df['date'].min()} to {df['date'].max()}")
-    
-    # ========== STEP 3: Preprocessing ==========
+    # ========== STEP 3: Preprocessing (Feature Engineering) ==========
     logger.info("\nSTEP 3: Feature Engineering & Preprocessing...")
     preprocessor = DataPreprocessor()
-    df_processed, removed_rows = preprocessor.preprocess_pipeline(
-        df, 
-        add_classification=False
-    )
     
-    logger.info(f"Processed dataset: {df_processed.shape[0]} rows (removed {removed_rows} NaN rows)")
+    df_processed = preprocessor.process(df, config)
+
+    feature_cols = [
+        'temperature', 'humidity', 'wind_speed', 'solar_radiation',
+        
+        'cci', 'season', 
+        
+        'day_of_week', 'month', 'is_weekend', 'is_holiday',
+        
+        'demand_lag_1', 'demand_lag_7', 
+        'demand_rolling_mean_3', 'demand_rolling_mean_7',
+        'demand_rolling_std_3', 'demand_rolling_std_7'
+    ]
     
-    # ========== STEP 4: Train/Test Split ==========
-    logger.info("\nSTEP 4: Train/Test Split...")
-    feature_cols = preprocessor.get_feature_columns()
-    
+    logger.info(f"Processed dataset: {df_processed.shape[0]} rows ready for training.")
+
+    # ========== STEP 3.5: EDA Visualization (on processed data with day-type labels) ==========
+    logger.info("\nSTEP 3.5: EDA Visualization...")
+    plots_dir = config['output']['plots_dir']
+    run_eda(df_processed, save_dir=plots_dir)
+
+    # ========== STEP 4: Split Train/Test ==========
+    logger.info("\nSTEP 4: Train/Test Split (Chronological)...")
     X_train, X_test, y_train, y_test, dates_train, dates_test = prepare_train_test_split(
         df_processed,
         feature_cols=feature_cols,
         target_col='demand_mwh',
         train_split_ratio=config['train_test_split']['train_ratio']
     )
+
+    # ========== STEP 5: Training & Tuning ==========
+    logger.info("\nSTEP 5: Model Training & Tuning...")
     
-    # ========== STEP 5: Model Training ==========
-    logger.info("\nSTEP 5: Training Models...")
+    model_types = ['baseline', 'linear', 'rf', 'xgb', 'catboost', 'catboost_ppso']
     trained_models = {}
-    predictions_dict = {}
     
-    for model_name in config['models']['train_models']:
-        logger.info(f"\n--- Training {model_name.upper()} ---")
-        
-        # Create model
-        if model_name == 'baseline':
-            model = BaselineModel()
-            predictions_dict[model_name] = model.predict(X_test)
-            trained_models[model_name] = {'model': model}
-        
-        elif model_name == 'linear':
-            trainer = ModelTrainer(create_model('linear'), use_scaler=True)
-            trainer.fit(X_train, y_train)
-            predictions_dict[model_name] = trainer.predict(X_test)
-            trained_models[model_name] = {'trainer': trainer}
-        
-        elif model_name == 'rf':
-            model = create_model('rf', n_estimators=200, max_depth=15)
-            model.fit(X_train, y_train)
-            predictions_dict[model_name] = model.predict(X_test)
-            trained_models[model_name] = {'model': model}
-            logger.info("✓ Random Forest trained")
-        
-        elif model_name == 'xgb':
-            model = create_model('xgb', n_estimators=200, max_depth=6, learning_rate=0.05)
-            model.fit(X_train, y_train)
-            predictions_dict[model_name] = model.predict(X_test)
-            trained_models[model_name] = {'model': model}
-            logger.info("✓ XGBoost trained")
-        
-        elif model_name == 'catboost':
-            model = create_model('catboost', iterations=200, depth=6, learning_rate=0.05)
-            model.fit(X_train, y_train)
-            predictions_dict[model_name] = model.predict(X_test)
-            trained_models[model_name] = {'model': model}
-            logger.info("✓ CatBoost trained")
-        
-        elif model_name == 'catboost_ppso':
-            ppso_config = config['models']['catboost_ppso']
-            # Convert param_bounds dict to list of lists
-            param_bounds = list(ppso_config['param_bounds'].values())
+    for m_type in model_types:
+        logger.info(f"\n--- Training model: {m_type.upper()} ---")
+        try:
+            model_obj = create_model(m_type)
             
-            # This improves performance and avoids data leakage
-            preprocessor = DataPreprocessor()  # Use preprocessor to get cat features
-            feature_cols = preprocessor.get_feature_columns()
-            cat_features = preprocessor.get_categorical_features(feature_cols)
+            use_scaler = True if m_type in ['linear'] else False
+            trainer = ModelTrainer(model_obj, use_scaler=use_scaler)
             
-            logger.info(f"CatBoost-PPSO: Using {len(cat_features) if cat_features else 0} categorical features")
+            if m_type == 'catboost_ppso':
             
-            ppso_model = CatBoostPPSOModel(cat_features=cat_features, k_folds=3)
-            ppso_model.fit(
-                X_train=X_train,
-                y_train=y_train,
-                param_bounds=param_bounds,
-                particles=ppso_config['particles'],
-                max_iter=ppso_config['max_iterations'],
-                early_stopping_rounds=ppso_config.get('early_stopping_rounds', 10),
-                random_state=42
-            )
-            predictions_dict[model_name] = ppso_model.predict(X_test)
-            trained_models[model_name] = {'model': ppso_model}
-    
+                ppso_bounds = {
+                    'iterations':    (200, 1000),  
+                    'learning_rate': (0.01,  0.15), 
+                    'depth':         (4,     8),    
+                    'l2_leaf_reg':   (1.0,  20.0)   
+                }
+                trainer.fit(X_train, y_train, param_bounds=ppso_bounds)
+            else:
+                trainer.fit(X_train, y_train)
+            
+            trained_models[m_type] = {
+                'model': trainer.model,
+                'trainer': trainer
+            }
+        except Exception as e:
+            logger.error(f"Failed to train model {m_type}: {e}")
+
     # ========== STEP 6: Evaluation ==========
-    logger.info("\nSTEP 6: Model Evaluation & Comparison...")
+    logger.info("\nSTEP 6: Evaluating Models & Generating Leaderboard...")
+
     evaluator = RegressionEvaluator()
+    metrics_report = []
     
-    df_metrics = evaluator.compare_models(
-        predictions_dict=predictions_dict,
-        y_true=y_test.values
-    )
+    for m_type, m_data in trained_models.items():
+        y_pred = m_data['trainer'].predict(X_test)
+        
+        model_metrics = evaluator.evaluate(y_test, y_pred, model_name=m_type)
+        metrics_report.append(model_metrics)
+        
+    df_metrics = pd.DataFrame(metrics_report)
+    df_metrics = df_metrics.sort_values(by='RMSE').reset_index(drop=True)
     
-    # Display leaderboard
-    print("\n" + "🏆 MODEL LEADERBOARD 🏆".center(80))
-    print("="*85)
+    metrics_csv_path = f"{config['output']['results_dir']}/model_leaderboard.csv"
+    df_metrics.to_csv(metrics_csv_path, index=False)
+    logger.info(f"✓ Leaderboard saved to {metrics_csv_path}")
+
+    comparison_csv_path = f"{config['output']['results_dir']}/model_comparison.csv"
+    df_metrics.to_csv(comparison_csv_path, index=False)
+    logger.info(f"✓ Model comparison saved to {comparison_csv_path}")
+    
+    print("\n" + "="*50)
+    print("MODEL LEADERBOARD (Sorted by RMSE)".center(50))
+    print("="*50)
     print(df_metrics.to_string(index=False))
-    print("="*85 + "\n")
-    
-    # Save leaderboard
-    df_metrics.to_csv(f"{config['output']['results_dir']}/model_comparison.csv", index=False)
-    logger.info(f"✓ Leaderboard saved to {config['output']['results_dir']}/model_comparison.csv")
-    
-    # ========== STEP 7: Visualization ==========
-    logger.info("\nSTEP 7: Generating Visualizations...")
-    
-    if config['evaluation']['plot_leaderboard']:
-        evaluator.plot_leaderboard(df_metrics, top_n=10)
-    
-    if config['evaluation']['plot_predictions']:
-        best_model_name = df_metrics.iloc[0]['Model']
-        best_predictions = predictions_dict[best_model_name]
-        evaluator.plot_predictions(
-            y_true=y_test.values,
-            y_pred=best_predictions,
-            dates=dates_test,
-            model_name=best_model_name
-        )
-    
-    if config['evaluation']['plot_residuals']:
-        best_model_name = df_metrics.iloc[0]['Model']
-        best_predictions = predictions_dict[best_model_name]
-        evaluator.plot_residuals(
-            y_true=y_test.values,
-            y_pred=best_predictions,
-            model_name=best_model_name
-        )
-    
-    if config['evaluation']['plot_feature_importance']:
-        for model_name, model_data in trained_models.items():
-            try:
-                if 'trainer' in model_data:
-                    model = model_data['trainer'].model
-                else:
-                    model = model_data['model']
-                
-                if model_name != 'baseline':
-                    FeatureImportanceVisualizer.plot_importance(
-                        model=model,
-                        feature_names=feature_cols,
-                        model_name=model_name,
-                        top_n=config['evaluation']['top_features']
-                    )
-            except Exception as e:
-                logger.warning(f"Could not plot importance for {model_name}: {e}")
-    
-    # ========== STEP 8: Save Results ==========
-    logger.info("\nSTEP 8: Saving Results...")
-    
+    print("="*50)
+
     if config['output']['save_models']:
         for model_name, model_data in trained_models.items():
-            if 'trainer' in model_data:
-                model_path = f"{config['output']['models_dir']}/{model_name}_model.pkl"
-                model_data['trainer'].save_model(model_path)
-    
-    # Save training summary
+            model_path = f"{config['output']['models_dir']}/{model_name}_model.pkl"
+            model_data['trainer'].save_model(model_path)
+
+    # ========== STEP 7: Feature Importance & Prediction Plots ==========
+    logger.info("\nSTEP 7: Generating evaluation plots...")
+    fi_viz = FeatureImportanceVisualizer()
+
+    # Models that support feature importance
+    importance_models = ['catboost', 'catboost_ppso', 'xgb', 'rf', 'linear']
+    for m_type in importance_models:
+        if m_type not in trained_models:
+            continue
+        m_data = trained_models[m_type]
+        raw_model = m_data['model']
+        # For CatBoostPPSOModel, the underlying CatBoost is stored in .final_model
+        if hasattr(raw_model, 'final_model'):
+            raw_model = raw_model.final_model
+        save_path = os.path.join(plots_dir, f'feature_importance_{m_type}.png')
+        fi_viz.plot_importance(
+            model=raw_model,
+            feature_names=feature_cols,
+            model_name=m_type.upper(),
+            top_n=len(feature_cols),
+            save_path=save_path
+        )
+        if os.path.exists(save_path):
+            logger.info(f"✓ Feature importance plot saved → {save_path}")
+
+    # Actual vs Predicted plot for best model
+    best_model_name = str(df_metrics.iloc[0]['Model'])
+    if best_model_name in trained_models:
+        y_pred_best = trained_models[best_model_name]['trainer'].predict(X_test)
+        pred_save_path = os.path.join(plots_dir, f'predictions_{best_model_name}.png')
+        evaluator.plot_predictions(
+            y_test, y_pred_best,
+            model_name=best_model_name.upper(),
+            save_path=pred_save_path
+        )
+        logger.info(f"✓ Prediction plot (best model) saved → {pred_save_path}")
+            
     summary = {
         'train_samples': len(X_train),
         'test_samples': len(X_test),
         'features': len(feature_cols),
-        'best_model': df_metrics.iloc[0]['Model'],
+        'best_model': str(df_metrics.iloc[0]['Model']),
         'best_mae': float(df_metrics.iloc[0]['MAE']),
         'best_rmse': float(df_metrics.iloc[0]['RMSE']),
         'best_r2': float(df_metrics.iloc[0]['R²']),
-        'date_range': f"{df['date'].min()} to {df['date'].max()}"
+        'date_range': f"{df_processed['date'].min().date()} to {df_processed['date'].max().date()}"
     }
     
-    with open(f"{config['output']['results_dir']}/summary.yaml", 'w') as f:
+    summary_path = f"{config['output']['results_dir']}/summary.yaml"
+    with open(summary_path, 'w', encoding='utf-8') as f:
         yaml.dump(summary, f)
     
-    logger.info(f"✓ Results saved to {config['output']['results_dir']}/")
-    
-    # ========== FINAL SUMMARY ==========
-    print("\n" + "="*70)
-    print("PIPELINE EXECUTION COMPLETED SUCCESSFULLY ✓".center(70))
-    print("="*70)
-    print(f"\nBest Model: {summary['best_model']}")
-    print(f"Test MAE: {summary['best_mae']:.2f} MWh")
-    print(f"Test RMSE: {summary['best_rmse']:.2f} MWh")
-    print(f"Test R²: {summary['best_r2']:.4f}")
-    print(f"\nResults saved to: {config['output']['results_dir']}/")
-    print()
+    logger.info("✓ Pipeline execution completed successfully!")
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logger.error(f"Pipeline failed: {e}", exc_info=True)
-        sys.exit(1)
+    main()

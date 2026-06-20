@@ -109,7 +109,7 @@ models:
     # PPSO settings
     particles: 50
     max_iterations: 100
-    early_stopping_rounds: 10 # Stop if no improvement for N iterations (prevents overfitting)
+    early_stopping_rounds: 15 # Stop if no improvement for N iterations (prevents overfitting)
 
 # [6] HYPERPARAMETER TUNING
 hyperparameter_tuning:

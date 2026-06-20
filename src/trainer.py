@@ -1,19 +1,3 @@
-"""
-Trainer Module
-==============
-
-Model training logic and hyperparameter management.
-
-Responsibilities:
-- Model training with proper scaling
-- Hyperparameter tuning (GridSearch, Random Search)
-- Cross-validation
-- Training history tracking
-
-Author: Energy Forecast Team
-Date: 2024
-"""
-
 import pandas as pd
 import numpy as np
 import logging
@@ -28,23 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class ModelTrainer:
-    """
-    Handles model training, hyperparameter tuning, and evaluation.
-    
-    Attributes:
-        model: Trained model instance
-        scaler: StandardScaler for feature normalization
-        training_history: Dictionary tracking training metrics
-    """
     
     def __init__(self, model: object, use_scaler: bool = True):
-        """
-        Initialize trainer.
-        
-        Args:
-            model (object): Model instance to train
-            use_scaler (bool): Whether to use StandardScaler (default: True)
-        """
         self.model = model
         self.scaler = StandardScaler() if use_scaler else None
         self.training_history = {}
@@ -53,19 +22,7 @@ class ModelTrainer:
     
     def fit(self, X_train: pd.DataFrame, y_train: pd.Series,
            X_val: Optional[pd.DataFrame] = None, 
-           y_val: Optional[pd.Series] = None) -> Dict[str, float]:
-        """
-        Train model with optional validation set.
-        
-        Args:
-            X_train (pd.DataFrame): Training features
-            y_train (pd.Series): Training target
-            X_val (pd.DataFrame): Validation features (optional)
-            y_val (pd.Series): Validation target (optional)
-        
-        Returns:
-            Dict: Training metrics {metric_name: value}
-        """
+           y_val: Optional[pd.Series] = None, **kwargs) -> Dict[str, float]:
         
         self.feature_names = X_train.columns.tolist()
         
@@ -77,7 +34,7 @@ class ModelTrainer:
         
         # Train model
         logger.info(f"Training {type(self.model).__name__}...")
-        self.model.fit(X_train_processed, y_train)
+        self.model.fit(X_train_processed, y_train, **kwargs)
         logger.info("✓ Training complete")
         
         # Compute training metrics
@@ -100,15 +57,6 @@ class ModelTrainer:
         return self.training_history
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        Make predictions on new data.
-        
-        Args:
-            X (pd.DataFrame): Features for prediction
-        
-        Returns:
-            np.ndarray: Predictions
-        """
         X_processed = X.copy()
         if self.scaler is not None:
             X_scaled = self.scaler.transform(X)
@@ -119,17 +67,6 @@ class ModelTrainer:
     @staticmethod
     def _compute_metrics(y_true: pd.Series, y_pred: np.ndarray, 
                         prefix: str = 'test') -> Dict[str, float]:
-        """
-        Compute regression metrics.
-        
-        Args:
-            y_true (pd.Series): True values
-            y_pred (np.ndarray): Predicted values
-            prefix (str): Prefix for metric names ('train', 'val', 'test')
-        
-        Returns:
-            Dict: Metrics dictionary {metric_name: value}
-        """
         mae = mean_absolute_error(y_true, y_pred)
         rmse = np.sqrt(mean_squared_error(y_true, y_pred))
         r2 = r2_score(y_true, y_pred)
@@ -143,12 +80,6 @@ class ModelTrainer:
         }
     
     def save_model(self, filepath: str):
-        """
-        Save trained model to file.
-        
-        Args:
-            filepath (str): Path to save model pickle file
-        """
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, 'wb') as f:
             pickle.dump({
@@ -160,12 +91,6 @@ class ModelTrainer:
         logger.info(f"✓ Model saved to {filepath}")
     
     def load_model(self, filepath: str):
-        """
-        Load trained model from file.
-        
-        Args:
-            filepath (str): Path to model pickle file
-        """
         with open(filepath, 'rb') as f:
             data = pickle.load(f)
         
@@ -178,25 +103,9 @@ class ModelTrainer:
 
 
 class HyperparameterTuner:
-    """
-    Hyperparameter tuning using GridSearchCV or RandomizedSearchCV.
-    
-    Supports time-series aware cross-validation.
-    """
-    
     def __init__(self, model: object, param_grid: Dict[str, list],
                 search_method: str = 'grid', cv_splits: int = 3,
                 scoring: str = 'neg_mean_absolute_error'):
-        """
-        Initialize tuner.
-        
-        Args:
-            model (object): Base model to tune
-            param_grid (Dict): Hyperparameter grid
-            search_method (str): 'grid' or 'random'
-            cv_splits (int): Number of CV folds (default: 3)
-            scoring (str): Scoring metric (default: 'neg_mean_absolute_error')
-        """
         self.model = model
         self.param_grid = param_grid
         self.search_method = search_method
@@ -208,17 +117,6 @@ class HyperparameterTuner:
     
     def tune(self, X_train: pd.DataFrame, y_train: pd.Series,
             time_series: bool = True) -> 'HyperparameterTuner':
-        """
-        Run hyperparameter tuning.
-        
-        Args:
-            X_train (pd.DataFrame): Training features
-            y_train (pd.Series): Training target
-            time_series (bool): Use TimeSeriesSplit for CV (default: True)
-        
-        Returns:
-            HyperparameterTuner: Self for method chaining
-        """
         
         # Choose CV strategy
         if time_series:
