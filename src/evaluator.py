@@ -28,7 +28,7 @@ class RegressionEvaluator:
             'MAE': mae,
             'RMSE': rmse,
             'R²': r2,
-            'MAPE': mape,
+            'MAPE (%)': mape,
             'RAE': rae,
             'WI': wi
         }
