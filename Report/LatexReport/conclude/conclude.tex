@@ -1,0 +1,82 @@
+\chapter{Conclusion}\label{ch:Conclusion}
+
+This chapter summarises the main findings of the project, identifies key contributions, acknowledges limitations, and proposes directions for future research.
+
+
+\section{Summary of Findings}
+
+This project developed and evaluated a comprehensive machine learning pipeline for daily electricity demand forecasting in Singapore, leveraging weather variables and temporal features. Eight model configurations were compared---a Lag-1 baseline, Linear Regression, Random Forest, XGBoost, and CatBoost in default form, plus PPSO-tuned variants of each tree-based model, all tuned with Phasor Particle Swarm Optimisation (PPSO) under an identical budget---using data spanning February 2023 to December 2025.
+
+The principal findings are:
+
+\begin{enumerate}
+    \item \textbf{CatBoost-PPSO is the best-performing model.} The PPSO-optimised CatBoost model achieved the highest predictive accuracy across all six evaluation metrics, with an $R^2$ of 0.914, MAE of 1{,}496.2 MWh, RMSE of 1{,}895.5 MWh, and MAPE of 0.89\% on the held-out test set.
+    
+    \item \textbf{PPSO hyperparameter optimisation provides substantial but model-dependent gains.} Compared to default CatBoost, the PPSO-tuned variant reduced MAE by 10.9\%, RMSE by 10.5\%, and improved $R^2$ by 2.2 percentage points; XGBoost also improved (RMSE $-$6.4\%) while Random Forest did not. This confirms that automated meta-heuristic tuning yields meaningful improvements over default configurations, particularly for gradient-boosted models.
+    
+    \item \textbf{Autoregressive features are the strongest predictors.} Feature importance analysis consistently identified lag-1 demand and rolling-mean features as the most influential predictors, followed by day-of-week and weather variables (temperature, humidity).
+    
+    \item \textbf{Weather variables contribute meaningfully but are secondary.} Temperature and the derived Comfort Climate Index (CCI) provide useful exogenous signal, particularly for capturing demand increases during hotter periods. However, their importance is subordinate to historical demand patterns at the daily resolution.
+    
+    \item \textbf{The methodology generalises across scales.} The CatBoost-PPSO approach, originally validated on hourly single-customer data by Zhang et al.\ \parencite{zhang2023catboostppso}, produces strong results when applied to daily national-level demand in a tropical equatorial climate, demonstrating its versatility.
+\end{enumerate}
+
+
+\section{Key Contributions}
+
+This project makes the following contributions:
+
+\begin{itemize}
+    \item \textbf{Application to a new context}: First application of the hybrid CatBoost-PPSO methodology to daily national-level electricity demand in Singapore, demonstrating cross-context generalisability.
+    
+    \item \textbf{Comprehensive feature engineering}: Design of a 16-feature set spanning weather, derived comfort indices, temporal calendar effects, and autoregressive demand dynamics, tailored to Singapore's tropical climate.
+    
+    \item \textbf{Rigorous comparative evaluation}: Systematic comparison of eight model configurations using six complementary metrics, with PPSO tuning applied to every tree-based model under an identical budget and time-series cross-validation to prevent temporal leakage.
+    
+    \item \textbf{Reproducible pipeline}: An end-to-end Python implementation driven by a single configuration file, enabling easy replication and extension.
+    
+    \item \textbf{Interactive forecasting portal}: A React-based web dashboard backed by a FastAPI service, providing a retrospective History Report and a forward-looking Demand Trends outlook that combines the trained CatBoost-PPSO model with live Open-Meteo weather forecasts \parencite{openmeteo2025api}, making the results accessible to non-technical stakeholders.
+\end{itemize}
+
+
+\section{Limitations}
+
+Several limitations should be noted:
+
+\begin{enumerate}
+    \item \textbf{Daily resolution}: The pipeline forecasts total daily demand and does not address intra-day peak load prediction, which is more relevant for operational grid management.
+    
+    \item \textbf{Retrospective evaluation}: Weather data is obtained from the Open-Meteo historical archive rather than a live forecasting service. In a real deployment scenario, the accuracy of weather forecasts would introduce additional prediction uncertainty.
+    
+    \item \textbf{No demand decomposition}: The model predicts aggregate national demand without decomposing it into sectoral (residential, commercial, industrial) contributions. Sector-specific models could provide more targeted insights.
+    
+    \item \textbf{Limited external factors}: The model does not incorporate electricity pricing, economic indicators, or large-scale event calendars (e.g.\ major sporting events, national emergencies) that may affect demand.
+    
+    \item \textbf{PPSO computational cost}: Although more efficient than grid search, each PPSO iteration requires multiple CatBoost training runs. For very large datasets or high-dimensional hyperparameter spaces, the computational cost may become significant.
+\end{enumerate}
+
+
+\section{Future Work}
+
+Several directions could extend and improve upon this work:
+
+\begin{enumerate}
+    \item \textbf{Hourly forecasting}: Extending the pipeline to hourly or sub-hourly resolution would capture intra-day demand patterns and peak load events, which are critical for real-time grid operations.
+    
+    \item \textbf{Deep learning comparison}: Incorporating LSTM, GRU, or Transformer-based models would enable a more comprehensive comparison between tree-based and sequence-based approaches, as suggested by Nair \parencite{nair2025predicting}.
+    
+    \item \textbf{Multi-step forecasting}: Predicting demand for multiple days ahead (e.g.\ 7-day horizon) would provide greater lead time for generation scheduling and fuel procurement.
+    
+    \item \textbf{Real-time deployment}: Integrating the pipeline with live weather forecast APIs and automated daily retraining would enable operational deployment for day-ahead demand forecasting.
+    
+    \item \textbf{Explainability}: Applying SHAP (SHapley Additive exPlanations) analysis would provide local, instance-level interpretability in addition to the global feature importance analysis presented in this study.
+    
+    \item \textbf{Transfer learning}: Testing the pipeline on demand data from other tropical cities (e.g.\ Bangkok, Kuala Lumpur, Jakarta) would evaluate the geographic transferability of the model and feature set.
+    
+    \item \textbf{Hybrid ensemble}: Combining CatBoost-PPSO with other well-performing models (e.g.\ Linear Regression for its complementary strengths) through stacking or weighted averaging could further improve accuracy.
+\end{enumerate}
+
+
+\section{Concluding Remarks}
+
+This project has demonstrated that the hybrid CatBoost-PPSO model is an effective approach for weather-driven short-term electricity demand forecasting in Singapore. The combination of CatBoost's native categorical feature handling with PPSO's parameter-free hyperparameter optimisation produces a forecasting model that is both accurate ($R^2 = 0.911$, MAPE $= 0.90\%$) and practical to implement. The findings contribute to the growing body of evidence that meta-heuristic-optimised machine learning models can outperform standard configurations in energy forecasting applications, and provide a foundation for future work on higher-resolution, real-time demand prediction systems for tropical urban environments.

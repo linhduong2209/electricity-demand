@@ -1,7 +1,6 @@
-electricity-demand/
+Implementation/electricity-demand/
 node_modules/
 dist/
-*.log
-*.aux
-*.out
-*.toc
+.vite/
+__pycache__/
+.DS_Store
