@@ -1,7 +1,10 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('./results/model_comparison.csv').dropna(how='all')
+BASE = os.path.dirname(os.path.abspath(__file__))
+df = pd.read_csv(os.path.join(BASE, 'model_comparison.csv')).dropna(how='all')
+df = df.rename(columns={'MAPE (%)': 'MAPE'})
 
 # Round columns
 df['MAE']  = df['MAE'].round(1)
@@ -16,6 +19,8 @@ df.insert(0, 'Rank', range(1, len(df)+1))
 
 name_map = {
     'catboost_ppso': 'CatBoost-PPSO',
+    'xgb_ppso':      'XGB-PPSO',
+    'rf_ppso':       'RF-PPSO',
     'linear':        'Linear Regression',
     'catboost':      'CatBoost',
     'rf':            'Random Forest',
@@ -81,7 +86,7 @@ fig.text(
 )
 
 plt.tight_layout(rect=[0, 0.04, 1, 0.95])
-out = './results/model_comparison_table.png'
+out = os.path.join(BASE, 'model_comparison_table.png')
 plt.savefig(out, dpi=180, bbox_inches='tight', facecolor='white')
 plt.close()
 print(f'Saved: {out}')

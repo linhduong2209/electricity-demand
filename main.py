@@ -113,7 +113,10 @@ def main():
     # ========== STEP 5: Training & Tuning ==========
     logger.info("\nSTEP 5: Model Training & Tuning...")
     
-    model_types = ['baseline', 'linear', 'rf', 'xgb', 'catboost', 'catboost_ppso']
+    # Fair comparison: every tunable (tree-based) model gets the same PPSO
+    # optimisation budget. Baseline/Linear have no hyperparameters to tune.
+    model_types = ['baseline', 'linear', 'rf', 'xgb', 'catboost',
+                   'rf_ppso', 'xgb_ppso', 'catboost_ppso']
     trained_models = {}
     
     for m_type in model_types:
@@ -124,15 +127,10 @@ def main():
             use_scaler = True if m_type in ['linear'] else False
             trainer = ModelTrainer(model_obj, use_scaler=use_scaler)
             
-            if m_type == 'catboost_ppso':
-            
-                ppso_bounds = {
-                    'iterations':    (200, 1000),  
-                    'learning_rate': (0.01,  0.15), 
-                    'depth':         (4,     8),    
-                    'l2_leaf_reg':   (1.0,  20.0)   
-                }
-                trainer.fit(X_train, y_train, param_bounds=ppso_bounds)
+            if m_type.endswith('_ppso'):
+                # Same PPSO budget for all tuned models; bounds are
+                # model-specific (defined in PPSOTunedModel.DEFAULT_SPACES)
+                trainer.fit(X_train, y_train)
             else:
                 trainer.fit(X_train, y_train)
             
@@ -182,13 +180,13 @@ def main():
     fi_viz = FeatureImportanceVisualizer()
 
     # Models that support feature importance
-    importance_models = ['catboost', 'catboost_ppso', 'xgb', 'rf', 'linear']
+    importance_models = ['catboost_ppso', 'xgb_ppso', 'rf_ppso', 'catboost', 'xgb', 'rf', 'linear']
     for m_type in importance_models:
         if m_type not in trained_models:
             continue
         m_data = trained_models[m_type]
         raw_model = m_data['model']
-        # For CatBoostPPSOModel, the underlying CatBoost is stored in .final_model
+        # For PPSO-tuned models, the underlying estimator is stored in .final_model
         if hasattr(raw_model, 'final_model'):
             raw_model = raw_model.final_model
         save_path = os.path.join(plots_dir, f'feature_importance_{m_type}.png')

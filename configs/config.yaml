@@ -52,12 +52,16 @@ scaling:
 # [5] MODEL CONFIGURATION
 models:
   # Which models to train?
+  # Fair comparison: every tunable (tree-based) model also gets a PPSO-tuned
+  # variant with the same optimisation budget.
   train_models:
     - "baseline" # Lag-1 baseline
     - "linear" # Linear Regression
-    - "rf" # Random Forest
-    - "xgb" # XGBoost
-    - "catboost" # CatBoost
+    - "rf" # Random Forest (default params)
+    - "xgb" # XGBoost (default params)
+    - "catboost" # CatBoost (default params)
+    - "rf_ppso" # Random Forest with PPSO optimization
+    - "xgb_ppso" # XGBoost with PPSO optimization
     - "catboost_ppso" # CatBoost with PPSO optimization
 
   # Baseline Model
@@ -110,6 +114,24 @@ models:
     particles: 50
     max_iterations: 100
     early_stopping_rounds: 15 # Stop if no improvement for N iterations (prevents overfitting)
+
+  # Random Forest with PPSO Optimization
+  rf_ppso:
+    type: "rf_ppso"
+    param_bounds:
+      n_estimators: [100, 800]
+      max_depth: [4, 25]
+      min_samples_split: [2, 20]
+      min_samples_leaf: [1, 10]
+
+  # XGBoost with PPSO Optimization
+  xgb_ppso:
+    type: "xgb_ppso"
+    param_bounds:
+      n_estimators: [100, 1000]
+      max_depth: [3, 10]
+      learning_rate: [0.01, 0.2]
+      reg_lambda: [1.0, 20.0]
 
 # [6] HYPERPARAMETER TUNING
 hyperparameter_tuning:
