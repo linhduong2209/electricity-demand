@@ -1,122 +1,113 @@
-# Singapore Energy Demand Forecast
+# Singapore Electricity Demand Forecasting
 
-## Machine Learning Project for Next-Day Electricity Demand Prediction
+Machine learning pipeline + web portal for **daily electricity demand forecasting in Singapore**, using weather variables (Open-Meteo), calendar features, and autoregressive demand history.
 
-### Project Overview
+Eight model configurations are compared under a chronological 80/20 split: Lag-1 Baseline, Linear Regression, Random Forest, XGBoost, CatBoost — plus **PPSO-tuned variants of every tree-based model** (RF-PPSO, XGB-PPSO, CatBoost-PPSO). Phasor Particle Swarm Optimisation (PPSO) is applied with an **identical budget to all tunable models** to guarantee a fair comparison. The best model (CatBoost-PPSO, R² ≈ 0.914) powers a web portal (FastAPI + React/Vite) with historical analysis and weather-driven demand forecasts.
 
-This project predicts Singapore's next-day electricity demand in MWh using historical weather conditions as the primary input features. Because air-conditioning is the dominant driver of electricity consumption in Singapore's tropical climate, weather variables such as temperature, humidity, and rainfall have a strong and learnable relationship with daily demand.
-
-**Location:** Singapore (1.3521°N, 103.8198°E)  
-**Data Sources:** Open-Meteo (free weather API) + Singapore Energy Market Authority (EMA)  
-**Training Period:** 2023–2024 (~730 daily records)  
-
----
-
-## Project Structure
+## Repository Structure
 
 ```
 electricity-demand/
-├── singapore_energy_forecast.ipynb    # Main Jupyter Notebook (Complete Pipeline)
-├── README.md                           # This file
+├── Implementation/         # ML pipeline + web portal (main codebase)
+│   ├── main.py             # Training pipeline entry point
+│   ├── configs/config.yaml # Central configuration (data, features, models, PPSO)
+│   ├── ema_daily_demand.csv# Cleaned daily demand data (output of tools/parse.py)
+│   ├── requirements.txt    # Python dependencies
+│   ├── src/
+│   │   ├── data_loader.py  # Demand CSV + Open-Meteo weather loading
+│   │   ├── preprocessing.py# Feature engineering (CCI, lags, rolling stats)
+│   │   ├── model.py        # Models + PPSO optimiser + PPSOTunedModel
+│   │   ├── trainer.py      # Unified train/predict/save wrapper
+│   │   ├── evaluator.py    # Metrics (MAE, RMSE, R², MAPE, RAE, WI) + plots
+│   │   └── visualizer.py   # EDA plots
+│   ├── tools/
+│   │   ├── parse.py        # Parse raw EMA weekly .xls files → ema_daily_demand.csv
+│   │   └── check.py        # Validate cleaned CSV (missing dates check)
+│   ├── dashboard/
+│   │   ├── backend/app.py  # FastAPI REST service (loads best model)
+│   │   └── frontend/       # React + Vite portal (History / Trends pages)
+│   ├── data/
+│   │   ├── ema/            # Raw EMA weekly demand .xls files (2023–2025)
+│   │   └── processed/      # Processed history for the dashboard
+│   ├── models/             # Trained model pickles (*.pkl)
+│   ├── results/            # model_leaderboard.csv, summary.yaml, plots/
+│   ├── notebooks/          # Exploration notebook
+│   └── docs/               # Reference papers (incl. CatBoost-PPSO study)
+└── Report/
+    ├── LatexReport/        # LaTeX source (thesis.tex, paper/, images)
+    └── *.pdf               # Compiled report
 ```
 
----
+## 1. Environment Setup
 
-## 9-Step Pipeline
-
-### **Step 1: Data Collection**
-
-- Fetch Open-Meteo daily weather data (temp, humidity, precipitation, wind speed)
-- Load Singapore EMA half-hourly demand data, aggregate to daily MWh
-- Merge datasets on date column
-
-### **Step 2: Exploratory Data Analysis (EDA)**
-
-- Time series visualization of demand and weather patterns
-- Correlation analysis (temperature-demand relationship: r ≈ 0.82)
-- Scatter plots and boxplots by day type
-- Identify seasonal and weekly patterns
-
-### **Step 3: Data Cleaning & Temporal Features**
-
-- Add Singapore public holiday flags (2023-2024)
-- Create temporal features: month, day_of_year, is_weekend, is_holiday
-- Handle missing values
-- Ensure 2023-2024 date coverage
-
-### **Step 4: Feature Engineering**
-
-- **Lag Features:** demand_lag_1, demand_lag_7, temp_lag_1
-- **Rolling Statistics:** 7-day, 30-day, 3-day rolling averages
-- **Interaction Features:** temperature × humidity
-- **Total Features:** 20 engineered features
-
-### **Step 5: Train/Test Split**
-
-- Chronological split: first 80% for training, last 20% for testing
-- Train: Jan 31 - Aug 20, 2024 (583 days)
-- Test: Aug 21 - Dec 31, 2024 (147 days)
-- NO shuffling to preserve time-series integrity
-
-### **Step 6: Model Training**
-
-- **Regression Models:**
-  - Linear Regression (baseline)
-  - Random Forest Regressor (best model)
-- **Classification Models:**
-  - Logistic Regression (baseline)
-  - Random Forest Classifier (best model)
-- Classification task: Predict demand level (High/Medium/Low) based on training set percentiles
-
-### **Step 7: Model Evaluation**
-
-- Regression metrics: MAE, RMSE, R²
-- Classification metrics: Accuracy, F1 Score, Confusion Matrix
-- Compare models against naive lag-1 baseline
-- Visualize predictions vs actual demand
-
-### **Step 8: Feature Analysis**
-
-- Feature importance from Random Forest models
-- Correlation matrix
-- Impact of temporal features vs weather features
-
-### **Step 9: Prediction Pipeline**
-
-Three prediction modes supported:
-
-1. **Past Date (2023-2024):** Look up actual weather from dataset
-2. **Tomorrow:** Fetch today's real weather (Open-Meteo API)
-3. **Future (1-16 days):** Fetch forecast weather (Open-Meteo API)
-
----
-
-## Running the Notebook
-
-### **Prerequisites**
+Requires **Python 3.9+** and **Node.js 18+**.
 
 ```bash
-pip install pandas numpy scikit-learn matplotlib seaborn requests jupyter xgboost
+# Move into the implementation folder (all commands below run from here)
+cd Implementation
+
+# Create a virtual environment
+python3 -m venv electricity-demand
+
+# Activate it
+source electricity-demand/bin/activate   # macOS / Linux
+# electricity-demand\Scripts\activate    # Windows
+
+# Install Python dependencies
+pip install -r requirements.txt
 ```
 
-### **Launch Jupyter**
+> All commands in sections 2–4 are run from `Implementation/` with the venv activated.
+
+## 2. Data Preparation (optional — cleaned CSV is included)
+
+Raw EMA weekly demand spreadsheets live in `data/ema/<year>/`. To rebuild the cleaned dataset:
 
 ```bash
-jupyter notebook singapore_energy_forecast.ipynb
+# Parse all raw .xls files → ema_daily_demand.csv
+python tools/parse.py
+
+# Validate: check for missing dates in the expected range
+python tools/check.py
 ```
 
----
+Weather data does **not** need downloading — the pipeline fetches it automatically from the Open-Meteo API during training.
 
-## Libraries & Tools
+## 3. Train Models
 
-| Library          | Purpose                                |
-| ---------------- | -------------------------------------- |
-| **pandas**       | Data loading, cleaning, manipulation   |
-| **numpy**        | Numerical operations                   |
-| **scikit-learn** | ML models (LR, RF, metrics, scaling)   |
-| **matplotlib**   | Static visualizations                  |
-| **seaborn**      | Statistical plots (heatmaps, boxplots) |
-| **requests**     | Open-Meteo API calls                   |
-| **xgboost**      | Alternative gradient boosting model    |
+```bash
+python main.py
+```
 
----
+This runs the full pipeline: data loading → feature engineering (16 features) → EDA plots → chronological split → training of all 8 models (PPSO tuning for RF/XGB/CatBoost, ~30–60 min) → evaluation.
+
+**Outputs:**
+
+| Path                            | Content                                   |
+| ------------------------------- | ----------------------------------------- |
+| `results/model_leaderboard.csv` | All models ranked by RMSE                 |
+| `results/summary.yaml`          | Best model + key metrics                  |
+| `results/plots/`                | EDA, feature importance, prediction plots |
+| `models/*.pkl`                  | Serialised trained models                 |
+
+## 4. Run the Backend (FastAPI, port 8000)
+
+```bash
+# From Implementation/
+cd dashboard/backend
+python -m uvicorn app:app --port 8000
+```
+
+Endpoints: `/api/summary`, `/api/range`, `/api/predict`, `/api/forecast`.  
+Check: `curl http://127.0.0.1:8000/api/summary`
+
+## 5. Run the Frontend (React + Vite, port 5173)
+
+```bash
+# From Implementation/
+cd dashboard/frontend
+npm install        # first time only
+npm run dev
+```
+
+Open http://localhost:5173 — the portal offers a **History Report** page (retrospective accuracy over a chosen period) and a **Demand Trends** page (forward forecasts driven by live Open-Meteo weather).

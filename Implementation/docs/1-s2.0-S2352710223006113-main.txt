@@ -1,0 +1,1191 @@
+Journal of Building Engineering 71 (2023) 106432
+
+Contents lists available at ScienceDirect
+
+Journal of Building Engineering
+journal homepage: www.elsevier.com/locate/jobe
+
+Predicting the short-term electricity demand based on the weather
+variables using a hybrid CatBoost-PPSO model
+Liangli Zhang a, b, Yun Chen a, b, *, Zhongzhen Yan c
+a
+b
+c
+
+School of Information Science and Engineering, Wuhan University of Science and Technology, Wuhan, Hubei, China
+Engineering Research Center for Metallurgical Automation and Measurement Technology of Ministry of Education, Wuhan, Hubei, China
+Key Laboratory of Hunan Province for Efficient Power System and Intelligent Manufacturing, Shaoyang, 422000, Hunan, China
+
+A R T I C L E I N F O
+
+A B S T R A C T
+
+Keywords:
+Electricity demand
+Hybrid method
+Categorical boosting (CatBoost)
+Meta-heuristic algorithms
+Phasor particle swarm optimization (PPSO)
+Hyper-parameters
+
+In this study, by using the capabilities of the CatBoost model and meta-heuristic algorithms, as
+well as the hybridization technique, an attempt was made to improve the prediction of electricity
+demand on a short-term scale. For this purpose, the hybrid CatBoost-PPSO model was suggested
+in this study to predict electricity demand based on weather variables. Finally, by conducting a
+case study and comparing the results of the proposed model with five other hybrid models, the
+results were evaluated and compared using various statistical indexes. The general approach used
+in this study is that the hyper-parameters of the Catboost were optimized using a meta-heuristic
+algorithm, and the best of them were used during the forecasting process. Also, during the
+network training, the K-Fold cross-validation algorithm is used to avoid over-fitting. The evalu­
+ation results of the models based on the test data showed that the hybrid CatBoost-PPSO model
+has high capabilities in short-term electricity demand forecasting. The indices obtained from this
+model show better values than other hybrid models. For example, the RMSE value of this model is
+equal to 42.3, which shows an improvement of almost 9.5% compared to the hybrid CatBoostALO model.
+
+List of abbreviations
+a
+ALO
+ANN
+Antlionti
+Ant ti
+ai
+B
+BRO
+bi
+CART
+CatBoost
+
+Largest step size
+Ant Lion Optimizer
+Artificial neural network
+Position of the jth antlion at the tth iteration
+Position of ith ant at tth iteration
+The minimum random walk of ith variable
+A constant number that determines the spiral shape of the logarithm
+Battle Royale Optimization
+The maximum random walk of ith variable
+T regression trees
+Categorical boosting
+
+* Corresponding author. School of Information Science and Engineering, Wuhan University of Science and Technology, Wuhan, Hubei, China.
+E-mail address: whcy1023@wust.edu.cn (Y. Chen).
+
+https://doi.org/10.1016/j.jobe.2023.106432
+Received 10 December 2022; Received in revised form 29 March 2023; Accepted 29 March 2023
+Available online 30 March 2023
+2352-7102/© 2023 Elsevier Ltd. All rights reserved.
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+cumsum Cumulative sum
+cti
+The minimum value of the ith variable
+t
+c
+The minimum value of all variables for the tth iteration
+The maximum value of the ith variable
+dti
+t
+d
+The maximum value of all variables for the tth iteration
+Di
+Distance of the ith of the moth from the jth flame
+Distance between the food source and the primary origin
+Disti
+f(Xi )
+The cost function for the position i
+FOA
+Fruit-fly Optimization Algorithm
+The fitness value of position i
+Fiti
+Fj
+jth flame
+Gbesti
+Vector of the global best position of the ith particle
+I
+A ratio that depends on the current and total iteration
+l
+current iteration number
+LSTM
+Long Short Time Memory
+lbd
+Lower bound in the d-dimensional problem space
+Mi
+ith moth
+MAE
+Mean Absolute Error
+MAPE
+Mean Absolute Percentage Error
+MaxCicle Number of repetitions
+MFO
+Moth Flame Optimization
+ML
+Machine learning
+mn
+Maximum number of repetitions
+N
+Normal distribution
+N
+Maximum number of flames
+NB
+Population of bowers
+no
+Number of observations
+PPSO
+Phasor Particle Swarm Optimization
+PSO
+Particle Swarm Optimization
+Pbesti (t) The best position of the ith particle in iteration t
+r
+A random number generated between 0 and 1 from a uniform distribution
+r(t)
+A binary function that takes only two values, zero and one
+R2
+Coefficient of Determination
+RAE
+Relative Absolute Error
+rand
+A random number
+RandomValue Random values
+RMSE
+Root Mean Square Error
+RtA
+A random walk around the selected ant lion at tth iteration
+RtE
+A random walk around the elite at tth iteration
+SBO
+Satin Bowerbird Optimization
+SVR
+Support Vector Regression
+Concentration judgment value of each fruit fly
+smelli
+SD(xd )
+The standard deviation of all solutions in the d-dimensional search space
+T
+Maximum number of iterations
+′
+t
+A random number between − 1 and 1
+TS
+Target statistics
+ubd
+Upper bound in the d-dimensional problem space
+The upper limit of the variables
+Varmax
+Varmin
+The lower limit of the variables
+Vi,max (t + 1) The phase angle of the ith particle at iteration t+1
+Vi (t)
+The velocity of the ith particle in iteration t
+WI
+Willmott’s Index
+X
+length of the coordinate axis
+xbest,d
+Best solution ever available in dimension d
+xi .damage The extent of the damage of the damaged player
+→
+X
+Magnitude in PPSO
+Xelite,k
+Elite position in the kth iteration
+Xi (t)
+The position of the ith particle in iteration t
+Xi (t + 1) Position of the ith particle at iteration t+1
+Xjk
+Target solution in the current iteration
+2
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Xmax
+Xmin
+Y
+y
+yi
+̂
+yi
+z
+
+The maximum value of X
+The minimum value of X
+Width of the coordinate axis
+Mean of observations
+ith observed value
+ith estimated value, and
+Percentage difference between Varmax and Varmin
+σ
+The ratio of the width of the space
+θ
+Phase in PPSO
+θi (t)
+The phase angle of the ith particle in iteration t
+θi (t + 1) Phasor angle of ith particle at iteration t+1
+λk
+Magnitude of step
+σ2
+Coefficient of variance a
+
+1. Introduction
+According to the International Energy Agency (IEA), the world’s highest energy consumer countries in 2021 were China, the United
+States, India, Russia, and Japan. These five countries alone accounted for around 55% of the world’s total energy consumption, while
+the top ten highest energy-consuming countries accounted for around 62% of global energy consumption [1].
+The IEA notes that the high energy consumption in these countries is primarily driven by factors such as population growth,
+economic development, industrialization, lifestyle choices, and energy policies [2]. The increasing energy consumption in these
+countries also highlights the need for greater energy efficiency and the development of cleaner and more sustainable energy sources to
+mitigate the impacts of climate change [3].
+The simplicity of converting electrical energy into other energies and its quick transfer to different places has increased the
+importance of its use in human life so that in today’s life, electricity is considered as one of the most important sources of energy
+supply. Electricity consumption is one of the basic criteria for improving the welfare of nations. These advantages, along with other
+factors such as rapid population growth, urbanization development, increase in the level of welfare and life, and industrial and
+commercial development have caused the scope of electricity consumption in countries to be expanded [4].
+The limitation of energy sources and the increase of environmental pollution, as well as the increasing warming of the earth, on the
+one hand, and the increase in energy consumption costs, on the other hand, have caused people and organizations to think about the
+management of energy consumption [5]. If the amount of electricity production exceeds the requirement due to its uneconomical
+storage, the electricity industry will suffer many losses. Therefore, the correct forecast of electricity consumption will manage the
+electricity production capacities and prevent possible future losses. An essential prerequisite to studying and managing an energy
+system, as previously mentioned, is good demand forecasting, which is needed not only for efficient investment in capacity expansion
+but also has an effective role in monitoring environmental issues, and study plans [6].
+In the following, the literature review of the research topic is examined. The literature review tried to refer more to the models
+presented by researchers in predicting electricity consumption. Torrini et al. [7] used the independent variable of GDP to forecast
+electricity consumption by the fuzzy logic approach. They compared their model with official predictions and the Holt model. The
+results showed that the fuzzy model has less error than the Holt model, and the results of this model were very promising according to
+the official predictions. Al-Musaylh et al. [8] used Multivariate Adaptive Regression Spline (MARS), Support Vector Regression (SVR),
+and Autoregressive Integrated Moving Average (ARIMA) models to forecast electricity demand in Queensland, Australia. The results
+showed that the MARS and SVR models could be more suitable compared to the ARIMA model for short-term prediction of electricity
+demand. Tondolo de Miranda et al. [9] used an artificial neural network (ANN) and fuzzy logic to predict electric load in the context of
+demand management. The results showed that this system could provide estimates of electricity demand with more satisfactory results.
+Schirmer et al. [10] evaluated the performance of different regression methods, including Linear Regression, Decision Trees, Deep
+Neural Networks, Recurrent Neural Networks, Gated Recurrent Units and Long Short Time Memory (LSTM) to predict the consumption
+of electrical energy in residential buildings. The results showed that the LSTM regression model outperformed all other regression
+algorithms and improved the predictive accuracy.
+Li et al. [11] used cluster analysis, cubist regression models, and Particle Swarm Optimization (PSO) to predict the total electricity
+consumption and the peak electricity demand in the university building. The results showed that the proposed strategy could improve
+prediction accuracy by 42.2%. In a study, Shadkam [12] used SARIMAX to predict average daily electricity consumption and peak
+demand in two university buildings. The results showed that this model could be used to make informed decisions about identifying
+anomalies in electricity consumption trends and quantifying energy and cost-saving measures. Zhang et al. [13] used a hybrid model,
+including K-means clustering and the CatBoost model, to predict the electric load and energy management of electric power systems.
+The results showed that the proposed model is more accurate than other ARMA, LSTM, GBDT, and CatBoost models in predicting
+electricity consumption.
+Zhang and Guo [14] used a hybrid method based on support vector regression (SVR) to forecast future electricity demand effec­
+tively. The results showed that the proposed method could predict better than other standard and advanced methods. Khan et al. [15]
+used a hybrid model based on machine learning (ML) techniques, which is a combination of three ML algorithms (extreme gradient
+3
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+boosting, categorical boosting, and random forest) to predict electricity energy consumption. The results of the research showed that
+the prediction results of the proposed model are better than individual algorithms. Chen et al. [16] used a combined CatBoost and
+K-means clustering model for accurate load prediction of power generation and power distribution systems. They compared it with
+other models like Autoregressive Moving Average, Gradient Boosting Decision Tree, CatBoost, and Long Short-Term Memory models.
+The results showed that the proposed model has more accurate results than others. Khan et al. [17] used a hybrid ML model consisting
+of Catboost, Xgboost, and multilayer perceptron to predict energy consumption and its influencing factors. The results showed that
+weather changes, holidays and weekends affect the forecast accuracy.
+1.1. Main novelties and contributions
+Energy consumption is an important issue of global concern. Accurate energy consumption forecasting can help balance energy
+demand and energy production. Data-driven energy consumption forecasting methods, which predict the short-term future energy
+consumption values based on historical data, are important elements in building information modeling. The short-term and very shortterm energy consumption forecasting techniques are useful for residential energy demand-side management, electricity price market
+design, energy efficiency and maintenance scheduling of large-scale complex smart power grids. The literature review shows that
+researchers proposed different methods to improve the accuracy of energy consumption prediction. Each method has its characteristics
+that are used according to different conditions. However, the discrepancy between actual and predicted energy consumption is still
+challenging. Electricity consumption demand can vary even hourly, so it is very important to use short-term forecasting models that
+can accurately predict. Since the CatBoost model usually does not consider time series information, using this model can be a good
+option to solve this problem. The CatBoost model is a new approach with proven capabilities in various studies. Therefore, in this
+study, a hybrid model was presented by combining the CatBoost model with Phasor Particle Swarm Optimization (PPSO) metaheuristic algorithm to improve the prediction of short-term electricity consumption.
+1.2. Paper structure
+The structure of the rest of the paper is as follows. In Section 2, the research methodology is presented. In this section, while
+introducing the hybrid CatBoost-PPSO model as a proposed method in this study, evaluation indices, other used optimizers, and
+research variables are also introduced. In section 3, by conducting a case study, the results obtained from different hybrid models are
+examined and discussed. In section 4, with the help of different statistical evaluation indices, the quantitative analysis and comparison
+of different models are discussed. In section 5, the comparison of the degree of convergence and the execution time of the models is
+discussed. Finally, in the last section, the research conclusion is presented.
+2. Methodology
+The main purpose of this study is to provide a model to improve the short-term forecast of electricity demand based on weather
+variables. Since the period of this study is short-term and, on the other hand, the number of research variables is also high, the
+forecasting process will be difficult. Therefore, it can be useful to apply methods based on machine learning. In this study, by
+combining categorical boosting (CatBoost) and Phasor Particle Swarm Optimization (PPSO) algorithm, a hybrid model was presented
+to improve forecasts. This model is called the "hybrid CatBoost-PPSO model." Catboost is a machine learning model developed by
+Yandex researchers. Since this algorithm has recently been open source, its applications and scope in various sciences are increasing
+significantly. The most important feature and advantage of this model compared to other ML models is that it can work on different
+data formats, which has increased its efficiency. Also, this model can be integrated with other deep learning models, which is useful in
+creating commercial applications. Catboost is used to handle regression and classification problems [18].
+The general approach applied in this study is that the CatBoost model was used as the main modeling method; then, the PPSO
+algorithm was used to optimize the hyper-parameters of the CatBoost. Also, to prevent overfitting, the K-Fold cross-validation method
+was used during the network training process. In most machine learning problems, the model’s parameters must be estimated. If the
+number of parameters is large, the complexity of the model increases and calculations may not be easily performed. Cross-validation is
+an effective method for estimating the number of model parameters [19,20]. In the models based on machine learning, overfitting is
+"the production of an analysis that corresponds too closely or exactly to a particular set of data, and may therefore fail to fit to
+additional data or predict future observations reliably". The solution for such a problem can be using the cross-validation method, in
+which the goal is to determine the number of suitable variables (parameters) of the model. For this purpose, the K-Fold cross-validation
+method was used in this study.
+To check and compare the accuracy of the proposed model, the results were compared with the other five hybrid models. The
+optimizers of these models are Fruit-fly Optimization Algorithm (FOA), Satin Bowerbird Optimization (SBO), Battle Royale Optimi­
+zation (BRO), Moth Flame Optimization (MFO), and Ant Lion Optimizer (ALO). Also, the statistical evaluation indices used for
+comparing the models are RMSE, MAPE, MAE, RAE, R2, and WI, which are mentioned based on the following equations [21–24]:
+no
+∑
+i=1
+R2 = 1 − ∑
+no
+
+(Diff1 )2
+
+(1)
+
+(Diff2 )2
+
+i=1
+
+4
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+√̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅
+√∑
+√n
+√ (Diff1 )2
+√
+RMSE = i=1
+n
+MAPE =
+
+(2)
+
+⃒
+no ⃒
+⃒Diff1 ⃒
+1 ∑
+⃒
+⃒
+no i=1 ⃒ yi ⃒
+
+no
+∑
+
+MAE = i=1
+no
+∑
+i=1
+RAE = ∑
+no
+
+(3)
+
+|Diff1 |
+
+(4)
+
+no
+
+|Diff1 |
+
+(5)
+
+|Diff2 |
+
+i=1
+
+∑no
+WI = 1 − ∑no
+
+i=1 (‖yi −
+
+2
+i=1 (Diff1 )
+
+(6)
+
+̂
+y i ‖ + ‖̂
+y i − ̂y i ‖)2
+
+In these equations, Diff1 = yi − ̂
+y i , Diff2 = yi − y, no is the number of observations, yi is the ith observed value, ̂
+y i is the ith estimated
+value, and y is the mean of observations.
+2.1. The hybrid CatBoost-PPSO model
+In this section, the introduction of the hybrid CatBoost-PPSO model is discussed in more detail. The flowchart of this model is
+shown in Fig. 1.
+According to Fig. 1, the model starts with implementing the CatBoost model. First, by determining the test and training dataset, the
+number of samples and the features are determined. Then, categorical features will be handled using the target statistics (TS) method.
+A categorical feature contains a set of categories that have different characteristics and cannot be compared with each other. The
+
+Fig. 1. Flowchart of the hybrid CatBoost-PPSO model.
+
+5
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+advantage of the TS method is that it handles the categorical features with minimal lack of information [25].
+In the next step, the categorical features are combined. Features can also be of different types (numeric, string, etc.), so they must be
+handled in a specific way. One of the most important advantages of combining the categorical features is that it can identify strong
+dependencies. Since by increasing the number of categorical features in the data set, the number of their different combinations in­
+creases exponentially, so Catboost uses this technique that, for each tree, combines all categorical features and their combinations used
+in the previous split of the same tree with categorical features in the dataset [26]. Then, T regression trees (CART) will be built one after
+another. Finally, the values of predictors will be averaged, providing a more accurate prediction of the model [27]. Also, during the
+network training, the K-Fold cross-validation algorithm is used to prevent overfitting. If the training dataset is randomly divided into K
+subsamples or folds with the same volume at each step of the cross-validation process, the K-1 number of these folds can be used as the
+training dataset, and one is considered as the testing dataset. By repeating the algorithm K times, every fold gets to be in a testing set
+exactly once and gets to be in a training dataset k-1 times. Finally, the average of the results is used to evaluate the model’s perfor­
+mance [28].
+Every time the loop of the Catboost repeats, if the stopping condition (i.e., the maximum number of iterations) allows, the PPSO
+algorithm is executed, and the hyper-parameter values are optimized. The PPSO algorithm is an extended version of the Particle Swarm
+algorithm, which is based on the Phasor theory. For this purpose, an initial population is randomly produced at first. In this algorithm,
+→
+each particle is expressed with two terms, magnitude ( X ) and phase (θ). The velocity of each particle in the search space is determined
+by the following equation [29,30]:
+Vi (t) = |cos θi (t)|2 sin θi (t) × (Pbesti (t) − Xi (t)) + |sin θi (t)|2 cos θi (t) × (Gbesti (t) − Xi (t))
+
+(7)
+
+where Vi (t) is the velocity of the ith particle at iteration t, θi (t) is the phase angle of the ith particle at iteration t, Xi (t) is the position of
+the ith particle at iteration t, Pbesti (t) is the best position of the ith particle at iteration t, Gbesti refers to the vector of the global best
+position of the ith particle. The updated position of each particle in the search space is determined by the following equation [29,30]:
+(8)
+
+Xi (t + 1) = Xi (t) + Vi (t)
+
+Where, Xi (t +1) is the position of the ith particle at iteration t + 1. With the help of the previous values, the updated phase angle and the
+updated maximum velocity of each particle in the search space are determined from the following equations [29,30]:
+θi (t + 1) = θi (t) + |cos θi (t) + sin θi (t)| × (2π)
+
+(9)
+
+Vi,max (t + 1) = |cos θi (t)|2 × (Xmax − Xmin )
+
+(10)
+
+where θi (t +1) is the phasor angle of the ith particle at iteration t + 1, Vi,max (t +1) is the phase angle of the ith particle at iteration t + 1,
+Xmax and Xmin are the maximum and minimum values of X, respectively [29,31]. In this way, the loop related to the PPSO algorithm will
+be repeated until the stop condition occurs. In this case, the optimal hyper-parameter values are sent to the Catboost model, which is
+used for training the network.
+2.2. Description of meta-heuristic algorithms
+This section has tried to describe other meta-heuristic algorithms used in this study.
+2.2.1. Fruit-fly Optimization Algorithm (FOA)
+Pan [32] introduced the FOA algorithm in 2012, inspired by the fruit fly behavior. In this algorithm, flies food search is based on
+their sense of smell. The initial position of each member of the fruit files is randomly determined. To determine the direction and
+distance of the fly’s search and to model the olfactory behavior of flies, random values (RandomValue) are selected. Based on the
+following equations, the fly’s movement along the length and width of the coordinate axis (X and Y axes) is added to the current
+coordinate [33].
+Xi = Xaxis + RandomValue
+
+(11)
+
+Yi = Yaxis + RandomValue
+
+(12)
+
+Using the following equation, the distance between the food source and the primary origin can be determined [33]:
+)0.5
+(
+Disti = Xi2 + Yi2
+
+(13)
+
+The following equation calculates the smell concentration judgment value of each fruit fly [33]:
+Si =
+
+1
+Disti
+
+(14)
+
+The smell concentration of each fruit fly can be calculated using the following equation [34]:
+(15)
+
+smelli = Function(Si )
+
+The following equation is used to determine the fruit fly that has the maximum odor concentration among the population [34]:
+6
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+(16)
+
+[bestSmell, bestIndex] = max(smelli )
+
+The fruit fly maintains the maximum smell concentration value and the X and Y coordinates and then flies to the best location using
+the following equations [34]:
+Smellbest = bestSmell
+
+(17)
+
+Xaxis = X(best index)
+
+(18)
+
+Yaxis = Y(best index)
+
+(19)
+
+Ultimately, the algorithm terminates if it reaches the maximum number of generations; otherwise, the previous steps are repeated
+[34].
+2.2.2. Satin Bowerbird Optimization (SBO)
+SBO is inspired by the life and nesting method of the bower bird. In this algorithm, the male bird tries to attract the female bird by
+making decorative devices and performing impressive movements. The steps of implementing this algorithm are performed as follows:
+In this algorithm, first, an initial population of bowers (NB) is randomly selected. Then the attractiveness of each bowerbird is
+determined using the following probability equation [35].
+Fiti
+Pi = ∑NB
+n=1 Fitn
+⎧
+⎪
+⎨
+Fiti =
+
+⎪
+⎩
+
+(20)
+
+1
+f (Xi ) ≥ 0
+1 + f (Xi )
+
+(21)
+
+1 + |f (Xi )| f (Xi ) < 0
+
+where Fiti represents the fitness value of position i, f(Xi ) denotes the cost function for position i. The best solution based on the elitist
+feature of this algorithm is saved in each step. Elites must then be identified through an iterative process to achieve the best results.
+Then, using the following equation, the position of each bower is updated [36]:
+[(
+]
+)
+Xjk + Xelite,k
+Xiknew = Xikold + λk
+(22)
+− Xikold
+2
+λk =
+
+a
+1 + Pi
+
+(23)
+
+In this equation, λk and a denote the magnitude of the step and largest step size, respectively, Xelite,k refers to the elite position in the kth
+iteration, and Xjk denotes the target solution in the current iteration [36].
+Weak bower birds may be attacked and killed by other birds that are stronger. As a result, a jump is created in the execution of the
+algorithm. This mutation and random changes can be shown using the following equation [35]:
+)
+(
+Xiknew ∼ N Xikold , σ2 = Xikold + (σ N(0, 1))
+(24)
+(25)
+
+σ = z × (Varmax − Varmin )
+
+where N refers to the normal distribution, Varmax and Varmin represent the upper and lower limits of the variables, respectively, σ 2 and σ
+denote the coefficient of variance and the ratio of the width of the space, respectively, z shows the percentage difference between
+Varmax and Varmin [35].
+2.2.3. Battle Royale Optimization (BRO)
+In this algorithm, each person is called a player who tries to kill the enemy player to survive. If a player leaves the safe zone, he may
+be damaged or removed from the game. When a player gets damaged, he changes his position and intends to attack the opponent. The
+following equations show the extent of the damage to the damaged player (xi .damage) as well as the new position of the player (xdam,d )
+[37]:
+(26)
+
+xi .damage = xi .damage + 1
+(
+
+xdam,d = xdam,d + r xbest,d − xdam,d
+
+)
+
+(27)
+
+In this equation, xbest,d denotes the best solution in dimension d, r indicates a random number generated between 0 and 1 from a
+uniform distribution. If a player gets too much damage, they will die and xi .damage is reset to zero. A player who has been killed after
+returning to the problem space is represented by the following equation [37]:
+(28)
+
+xdam,d = r(ubd − lbd ) + lbd
+
+7
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+where ubd and lbd are the upper and lower bounds in the d-dimensional problem space, respectively, which are updated using the
+following equations [37]:
+ubd = xbest,d − SD(xd )
+
+(29)
+
+lbd = xbest,d − SD(xd )
+
+(30)
+
+where SD(xd ) expresses the standard deviation of all solutions in the d-dimensional search space. The following equation shows the
+best way to reach the best solution, which is expressed as follows [37]:
+(Δ)
+Δ = Δ + round
+(31)
+2
+In this equation, the initial value for Δ is log10 (MaxCicle), and MaxCicle refers to the number of repetitions [37].
+2.2.4. Moth Flame Optimization (MFO)
+Mirjalili invented the meta-heuristic Moth Flame Optimization (MFO) algorithm in 2015 [38], inspired by the flight of moths
+around a candle flame. This algorithm is a population-based algorithm. In this algorithm, moths are proposed solutions (candidate,
+volunteer). In this algorithm, moths maintain a fixed angle to the moon and fly in a spiral. The logarithmic spiral has been chosen as the
+main mechanism for updating the moths’ position, which is described in the form of the following equation [39]:
+′
+
+(32)
+
+′
+
+Mi = Di × ebt × cos(2πt ) + Fj
+
+In this equation, Mi denotes the ith moth, Fj denotes the jth flame, b is a constant number that determines the spiral shape of the
+′
+logarithm, t is a random number between − 1 and 1, Di is the distance of the ith of the moth from the jth flame, which is defined by the
+following equation [39]:
+⃒
+⃒
+Di = ⃒Fj − Mi ⃒
+(33)
+Updating the position of the moths with respect to n different positions in the search space reduces the extraction of the best
+promising solutions. To solve this problem, an adaptive mechanism for the number of flames is presented [39]:
+))
+(
+(
+N− 1
+Nflame = round N − l ×
+(34)
+T
+where l represents the current iteration number, T is the maximum number of iterations, and N shows the maximum number of flames
+[40].
+2.2.5. Ant Lion Optimizer (ALO)
+ALO is a nature-inspired algorithm first presented by Mirjalili in 2015 [41]. The ALO algorithm mimics the way antlions hunt lions
+in nature. The six main steps regarding the behavior of antlions in nature for hunting are.
+(1) Random movements of ants.
+(2) Trapping ants in pits,
+(3) Making a trap
+(4) sliding the ants inside the trap
+(5) catching the prey and rebuilding the pit
+(6) Elitism should be considered in the process of simplifying this algorithm.
+The general modeling approach is that ants move randomly in the search space and antlions try to hunt them. Antlions try to
+improve hunting conditions by rebuilding traps. The random movement of ants in nature can be expressed with the help of the
+following equation [41]:
+(35)
+
+Xt = [0, cumsum(2r(t1 ) − 1, …, cumsum(2r(tmn ) − 1]
+
+where cumsum represents cumulative sum, mn indicates the maximum number of repetitions, t is repetition number and r(t) is a binary
+function that takes only two values zero and one according to the value of the random number based on the following equation [41]:
+{
+1 if rand > 0.5
+r(t) =
+(36)
+0 if rand ≤ 0.5
+where rand is a number that is randomly generated between 0 and 1 with a uniform distribution [42]. In the following, the algorithm
+execution steps are explained.
+(1) Random movements of ants
+Eq. (35) is the main equation to calculate the random walks of ants. But since the search space is limited, by normalizing the walks
+8
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+of ants with the help of the following equation, the random movement of the ant in the search space can be calculated [43]:
+) (
+)
+(X t − ai × dit − cti
+Xit = i
++ cti
+(bi − ai )
+
+(37)
+
+where ai and bi are the minimum and maximum random walk of ith variable, respectively, cti and dti represents the minimum and
+maximum value of the ith variable [43].
+(2) Trapping ants in pits
+Trapping the ants in antlion’s holes is mentioned based on the following equation [43]:
+cti = Antliontj + ct
+
+(38)
+
+dit = Antliontj + dt
+
+(39)
+
+where ct and dt are respectively the minimum and maximum values of all variables for the tth iteration, Antlionti expresses the position
+of the jth antlion at the tth iteration.
+(3) Making a trap
+At this stage, the algorithm determines the antlions that have the best fitness values with the help of a roulette wheel operator.
+These antlions have more probability to trap the ants.
+(4) Sliding the ants inside the trap
+At this stage, the ants slide toward the antlions inside the trap based on the following equations [44]:
+ct =
+
+ct
+I
+
+(40)
+
+dt =
+
+dt
+I
+
+(41)
+
+where I indicates a ratio that depends on the current and total iteration.
+(5) Catching the prey and rebuilding the pit
+
+Fig. 2. Time series of the errors and predicted values of electricity demand (KW) for all hybrid models.
+
+9
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+At this stage, hunting the ants and reconstruction of the pits will be done based on the following equation [44]:
+)
+(
+)
+(
+Antliontj = Antti if f Antti > f Antliontj
+
+(42)
+
+where Antti expresses the position of ith ant at tth iteration.
+(6) Elitism
+Finally, the best antlion in each iteration is considered as elite and Ant ti is the position of ith ant at tth iteration which is described by
+the following equation [44]:
+Antti =
+
+RtA + RtE
+2
+
+(43)
+
+Where, RtA indicates the random walk around the selected ant lion, and RtE is the random walk around the elite at tth iteration [44].
+2.3. Research variables
+In this study, the electricity demand prediction is investigated based on weather variables. To this end, the electricity demand in kW
+is considered as the output variable (dependent variable). The input variables (independent variables) also include air pressure
+[mmHg], air temperature [◦ C], relative humidity [%], solar irradiation [W/mA2], and wind speed [m/s]. To conduct a case study, an
+actual dataset is used which is based on the electricity consumed by a residential customer at a predetermined location. The dataset is
+gathered between December 2010 and November 2018 with a 1-h time-step resolution.
+3. Results and discussion
+In this section, by conducting a case study based on the actual data mentioned in the previous section, the accuracy of different
+models is examined and compared. Fig. 2 shows the time series of the errors and predicted values of electricity demand (kW) for all
+hybrid models. Using a dashed line in black, the time series of all models are divided by the dataset type, i.e., test and train. The time
+series of errors are also shown in red for all hybrid models.
+As shown in Fig. 2, it can be seen that the time series of predicted values by all models are placed almost on the observed time series.
+Therefore, it can be said that all models are accurate. Based on the time series of errors, it can be seen that the amplitude of error
+variation during the test dataset is greater than the train one, as expected. Fig. 3 shows the scatter plots of the observation-prediction of
+the electricity demand in kW for all hybrid models. The R2 values of all hybrid models are also presented by the train or test datasets for
+each model.
+
+Fig. 3. The Observation- Prediction plots of all hybrid models.
+
+10
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+According to Fig. 3, as expected, it can be seen that the dispersion of the test data is more than the training data around the center
+line. The scatters related to the train dataset are closer to the center line than those related to the test dataset. According to this figure,
+the R2 values of all models related to the train dataset are almost the same. But, based on the test dataset, the hybrid Catboost-PPSO
+model has the highest values of R2, and the hybrid Catboost-FOA model has the lowest values of this index among all models.
+Therefore, by evaluating the precision of the trained models based on the test dataset, it can be concluded that the hybrid CatboostPPSO model and the hybrid Catboost-FOA model have respectively the best and weakest performance among all hybrid models.
+Fig. 4 shows the scatter plots of errors, the frequency histogram, and the probability density function (PDF) curves of the normal
+distribution of errors for the proposed and other hybrid models. According to the time series of errors as expected, it can be seen that
+the amplitude of the error changes during the train dataset is lower than those during the test dataset for all hybrid models. Also, the
+PDF curves of all models are almost on top of each other, which means that their overall performance is almost the same.
+For a better comparison, the scatter plots of errors, the error frequency histograms with fitted Normal distribution curves for the
+proposed method, along with other hybrid models are shown in Fig. 5, which all are separated by the type of the dataset, i.e., train and
+test.
+As shown in Fig. 5, by comparing the time series of errors during the test and train datasets, in general, it can be concluded that all
+hybrid models based on the train dataset have a lower amplitude of error changes than related models based on the test dataset. This
+has led to the Normal distribution curves related to the train dataset having higher peak values and shorter outliers than those related
+to the test dataset. According to the distribution curves related to the train dataset, it seems that the hybrid Catboost-PPSO model has
+the longest outliers and also the highest enclosed area among all models. On the other hand, it seems that the hybrid Catboost-ALO
+model has the shortest outliers and the lowest enclosed area among all models. Therefore, it can be concluded that the hybrid
+Catboost-PPSO model and the hybrid Catboost-ALO model have the least and the most error values during the training process,
+respectively. To evaluate more accurately, the Normal distribution of errors for all hybrid models is examined separately in Fig. 6. This
+figure shows the normal distribution of errors for the proposed method along with other hybrid models, which all are separated by the
+type of dataset, i.e., train and test.
+According to Fig. 6, based on the train dataset, it can be seen that the hybrid Catboost-PPSO model has the largest outliers (highest
+standard deviation) and also the greatest enclosed area, which means that this model performs weaker than other models. After this
+model, the hybrid Catboost-SBO model is placed in the second rank of the weakest performance among the models. Also based on the
+train dataset, the results showed that the hybrid Catboost-ALO model has the shortest outliers and also the lowest enclosed area, which
+means that ALO performs better than other optimizers in the prediction of electricity demand. Based on the test dataset, it can be
+concluded that the hybrid Catboost-ALO model has the largest outliers and also the greatest enclosed area, which means that this
+model performs weaker than other hybrid models. It should be noted that the normal distribution curves of other hybrid models are
+almost similar, which is better to be compared quantitatively using evaluation indices.
+
+Fig. 4. Comparison of error values for all hybrid models.
+
+11
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Fig. 5. Comparison of the error values of the proposed method along with other hybrid models.
+
+4. Quantitative comparison of models
+In this section, to make a more accurate evaluation, a quantitative comparison of the models with each other is done using different
+evaluation indices. For this purpose, the values of different evaluation indices are shown in Table 2. According to this table, during the
+training phase, the WI values of four optimizers, i.e., FOA, BRO, MFO, and ALO are the same and equal to one, which are the greatest
+values of this index. So, the models corresponding to these optimizers perform better than others during the training phase. But during
+the testing phase, the hybrid Catboost-PPSO model with the WI value of 0.9925 performs better than others in the prediction of
+electricity demand. On the other hand, the WI value of the hybrid Catboost-ALO model is equal to 0.9909 based on the test dataset,
+which is also the lowest value of this index. So, based on the WI index, it can be concluded that the hybrid Catboost-ALO model
+performs weaker than other models in predicting electricity demand. In general, the evaluation of the models based on the test dataset
+using the WI index showed that the hybrid models optimized by PPSO, SBO, FOA, BRO, MFO, and ALO algorithms have respectively
+the best performance based on the WI index. Despite the PPSO method having lower accuracy for training data than other methods, it
+12
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Fig. 6. Normal distribution of errors for the proposed method along with other hybrid models.
+
+Table 2
+Obtained statistical results for different optimizers.
+Optimizer
+
+MAPE
+
+MAE
+
+RAE
+
+R2
+
+WI
+
+6.79707414
+2.07540517
+5.25919415
+1.4156828
+1.4076693
+0.9049
+
+0.0168165
+0.0051033
+0.0132658
+0.0035414
+0.0034963
+0.0022
+
+5.13937798
+1.5376
+3.98841584
+1.04991198
+1.04281446
+0.6655
+
+0.0147
+0.0045
+0.0114
+0.0031
+0.0031
+0.0020
+
+0.9992511
+0.9999302
+0.9995516
+0.9999675
+0.9999679
+0.999987
+
+0.9998
+1.0000
+0.9999
+1.0000
+1.0000
+1.0000
+
+42.3051193
+43.0049062
+43.1004027
+44.2685665
+44.3658048
+46.7622
+
+0.0715268
+0.0715084
+0.0750973
+0.0746051
+0.0744297
+0.0815
+
+25.93782012
+25.7423
+26.29445138
+27.17226182
+27.12657154
+29.2924
+
+0.0911
+0.0927
+0.0929
+0.0954
+0.0956
+0.1008
+
+0.9709303
+0.9699606
+0.9698271
+0.9681693
+0.9680293
+0.9644820
+
+0.9925
+0.9922
+0.9923
+0.9918
+0.9917
+0.9909
+
+RMSE
+Train
+
+PPSO
+FOA
+SBO
+BRO
+MFO
+ALO
+Test
+PPSO
+FOA
+SBO
+BRO
+MFO
+ALO
+
+offered better results for testing data. As it is known, testing accuracy is more important in these models. In addition, the PPSO method
+surpassed all other methods in terms of convergence speed which is an important advantage for optimization methods.
+Fig. 7 shows the R2 values of the proposed method along with other hybrid models, which all are separated by the type of the
+dataset, i.e., test and train. Based on the train dataset, the R2 value of the hybrid Catboost-ALO model is equal to 0.999987, which is the
+highest value of this index compared with others. So, by considering the train dataset, the hybrid Catboost-ALO model performs better
+than others based on the R2 index. But based on the test dataset, the hybrid Catboost-PPSO model with R2 equal to 0.9709303 has the
+highest value among all models. Also, the hybrid Catboost-ALO model with R2 equal to 0.964482 has the lowest value among all
+models. Therefore, the evaluation of the models based on the test dataset shows that the hybrid Catboost-PPSO model has the best
+performance, and the hybrid Catboost-ALO model has the worst performance. In general, the results of the evaluation of the trained
+models based on the test dataset using the R2 index showed that the hybrid models optimized by PPSO, FOA, SBO, BRO, MFO, and ALO
+algorithms have the best performance for predicting the electricity demand (kW).
+Fig. 8 shows the performance of all hybrid models based on the RMSE and MAPE indexes, which are separated by the dataset type.
+Based on the train dataset, the RMSE and MAPE values of the hybrid Catboost-PPSO model are equal to 6.79707414 and 0.0168165,
+respectively. These values are greater than other related models, which proved that the hybrid Catboost-PPSO performs weaker than
+others. The results also showed that the hybrid Catboost-ALO model performs better than others based on these two indexes. The RMSE
+and MAPE values of this model are respectively equal to 0.9049 and 0.0022, which all are lower than other models.
+Based on the test dataset, the RMSE value of the hybrid Catboost-PPSO model is equal to 42.3051193, which is also the lowest value
+of this index. Also, the MAPE value of the hybrid Catboost-FOA model is equal to 0.0715084, which is also the lowest value of this
+index. After this model, the hybrid Catboost-PPSO model with the MAPE value of 0.0715268 has the second rank of the best models. On
+the other hand, by considering the test dataset, the RMSE and MAPE values of the hybrid Catboost-ALO model are respectively equal to
+46.7622 and 0.0815, which all are the highest value of these two indexes compared to other models. Therefore, the hybrid CatboostALO model predicted its observed values weaker than others based on the RMSE and MAPE indexes.
+Fig. 9 shows the performance of all hybrid models based on the RAE and MAE indexes, which are separated by the dataset type.
+Based on the train dataset, the RAE and MAE values of the hybrid Catboost-PPSO model are respectively equal to 0.0147 and
+5.13937798, which are the lowest values of these indexes compared to other models. On the other hand, the RAE and MAE values of
+the hybrid Catboost-ALO model are respectively equal to 0.0020 and 0.6655, which are both greater than those indexes compared to
+13
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Fig. 7. The R2 values of the proposed method along with other hybrid models.
+
+other models. Therefore, based on the train dataset, the hybrid Catboost-PPSO model and the hybrid Catboost-ALO model have the
+weakest and the best performance compared to other models, respectively.
+Based on the test dataset, the RAE value of the hybrid Catboost-PPSO model is equal to 0.0911, which is also the lowest value of this
+index. Also, the MAE value of the hybrid Catboost-FOA model is equal to 25.7423, which is also the lowest value of this index. After this
+model, the hybrid Catboost-PPSO model with the MAE value of 25.93782012 has the second rank of the best models. On the other
+hand, by considering the test dataset, the RAE and MAE values of the hybrid Catboost-ALO model are respectively equal to 0.1008 and
+29.2924, which all are the highest value of these two indexes compared to other models. Therefore, the hybrid Catboost-ALO model
+predicts its observed values as weaker than others based on the RAE and MAE indexes.
+5. Comparison of convergence and execution speed of models
+In this section, the convergence and the run speed of different models are compared. Fig. 10 shows the time series of the Run times
+(s) for all hybrid models based on the maximum iteration number of 500. According to this figure, it seems that the average run time of
+the hybrid Catboost-PPSO model and the hybrid Catboost-SBO model is lower than other models. Therefore, it can be expected that the
+total Run time of these two models during 500 iterations are lower than others.
+To evaluate more precisely, the bar graph of the total Run times of all hybrid models is shown in Fig. 11. According to this figure, it
+can be seen that the total Run times of the hybrid Catboost-SBO model and the hybrid Catboost-PPSO model are, respectively equal to
+2743.47 and 2848.62 s, which are the lowest value of run time among all hybrid models. Also, the highest value of the Run time is
+belonged to the hybrid Catboost-RBO model, which lasted 4707.87 s.
+14
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Fig. 8. The RMSE and MAPE indexes of the proposed method, along with other hybrid models.
+
+Fig. 9. The RAE and MAE indexes of the proposed method, along with other hybrid models.
+
+15
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Fig. 10. Time series of the Run times (s) for all hybrid models.
+
+Fig. 11. Comparison of the total Run times of all hybrid models.
+
+Fig. 12 shows the convergence curve of the proposed method along with other hybrid models based on the maximum iteration
+number of 500. The amount of convergence is calculated based on the linear composition of three statistical indexes, including MSE,
+RMSE, and MAPE, and calculated by the equation: Z = [0.3 × MSE + 0.4 × MAPE + 0.3 × RMSE]. As it is known, the coefficient value
+of the MAPE index is considered 0.4, which is also the highest value. Therefore, this index has the greatest role and influence in
+determining the amount of convergence. Also, the coefficient weights of the MSE and RMSE indexes are considered the same and equal
+to 0.3.
+According to Fig. 12, it can be concluded that the hybrid Catboost-MFO model and the hybrid Catboost-BRO model have the lowest
+convergence value. The convergence values of these models are respectively equal to 3852.2640 and 3852.2764. The highest
+convergence value belongs to the hybrid Catboost-PPSO model with a convergence value of 4254.4108.
+6. Conclusion
+The precise prediction of electricity demand in the short-term is crucial for effective power system planning, which involves tasks
+such as scheduling the use of power generating capacity, purchasing fuel, and managing the power system. This is particularly
+16
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+Fig. 12. Convergence curve of the proposed method and other hybrid models.
+
+important for the residential sector, which is a major contributor to peak loads in most electrical systems. In this study, the hybrid
+Catboost-PPSO model was investigated to improve the short-term forecast of electricity demand based on weather variables. The
+general approach in this study was that the hyper-parameters of the CatBoost were optimized with the help of the PPSO algorithm.
+These optimal values were used to train the network. Finally, to evaluate the accuracy of the proposed model by conducting a case
+study, the results were compared with five other hybrid models using different evaluation indices. The results of this study proved that
+the approach used in this research has a significant effect on improving the predictions. The results showed that the proposed model is
+highly accurate in predicting short-term electricity demand. In general, the examination of various evaluation indices showed that the
+PPSO, SBO, FOA, BRO, MFO, and ALO algorithms are the most accurate in improving the results and reducing the error, respectively.
+The main results of the are described as follows.
+• According to the obtained results, in the test data, the lowest RMSE and RAE is obtained for the proposed Catboost-PPSO model by
+42.03 and 0.0911.
+• Checking the accuracy of trained hybrid models based on the test dataset showed that the hybrid Catboost-ALO model has the
+weakest performance in predicting electricity demand. For example, the evaluation of the models based on the test dataset shows
+that the R2 value of the hybrid Catboost-PPSO model and the hybrid Catboost-ALO model are respectively equal to 0.9709303 and
+0.964482, which are the highest and lowest values of this index among all hybrid models.
+• Although the PPSO technique may have lower accuracy when training data is compared to other methods, it performs better when
+it comes to testing data which is more crucial in such models.
+• Additionally, the PPSO method outperforms all other methods in terms of convergence speed, which is a significant advantage for
+optimization methods.
+Accurate prediction of electricity consumption is essential for providing actionable insights to decision-makers for managing
+volume and potential trends in future energy consumption for efficient resource management. One crucial issue that needs attention in
+load forecasting is the data requirements of each region, which pose a limitation to deep learning applications. Many operational
+regions lack meteorological stations, and if they exist, the available data may be affected by data privacy concerns. To enhance
+forecasting procedures in data-driven power system applications, it is necessary to address these challenges and develop models that
+can be applied to regions with limited data. Therefore, future studies could focus on introducing and enhancing models that can be
+generalized to regions with data shortages.
+Credit author statement
+Liangli Zhang: Data curation, Investigation, Methodology, Software, Writing-original draft.
+Yun Chen: Funding acquisition, Methodology, Project administration, Supervision, Writing-review & editing.
+Zhongzhen Yan: Resource, Project administration, Methodology, Software.
+Declaration of competing interest
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to
+influence the work reported in this paper.
+Data availability
+The authors are unable or have chosen not to specify which data has been used.
+
+17
+
+Journal of Building Engineering 71 (2023) 106432
+
+L. Zhang et al.
+
+References
+[1] G. Aydin, H. Jang, E. Topal, Energy consumption modeling using artificial neural networks: the case of the world’s highest consumers, Energy Sources, Part B
+Econ, Planning, Policy 11 (2016) 212–219.
+[2] A. Nakhaee Sharif, S. Keshavarz Saleh, S. Afzal, N. Shoja Razavi, M. Fadaei Nasab, S. Kadaei, Evaluating and identifying climatic design features in traditional
+Iranian architecture for energy saving (case study of residential architecture in northwest of Iran), Complexity (2022) 2022.
+[3] G. Aydin, Modeling of energy consumption based on economic and demographic factors: the case of Turkey with projections, Renew. Sustain. Energy Rev. 35
+(2014) 382–389.
+[4] H.-K. Ringkjøb, P.M. Haugan, I.M. Solbrekke, A review of modelling tools for energy and electricity systems with large shares of variable renewables, Renew.
+Sustain. Energy Rev. 96 (2018) 440–459.
+[5] H. Shakibi, S. Afzal, A. Shokri, B. Sobhani, Utilization of a phase change material with metal foam for the performance improvement of the photovoltaic cells,
+J. Energy Storage 51 (2022), 104466, https://doi.org/10.1016/j.est.2022.104466.
+[6] D. Akay, M. Atak, Grey prediction with rolling mechanism for electricity demand forecasting of Turkey, Energy 32 (2007) 1670–1675.
+[7] F.C. Torrini, R.C. Souza, F.L.C. Oliveira, J.F.M. Pessanha, Long term electricity consumption forecast in Brazil: a fuzzy logic approach, Socioecon. Plann. Sci. 54
+(2016) 18–27.
+[8] M.S. Al-Musaylh, R.C. Deo, J.F. Adamowski, Y. Li, Short-term electricity demand forecasting with MARS, SVR and ARIMA models using aggregated demand data
+in Queensland, Australia, Adv. Eng. Inf. 35 (2018) 1–16.
+[9] S. Tondolo de Miranda, A. Abaide, M. Sperandio, M.M. Santos, E. Zanghi, Application of artificial neural networks and fuzzy logic to long-term load forecast
+considering the price elasticity of electricity demand, Int. Trans. Electr. Energy Syst. 28 (2018), e2606.
+[10] P.A. Schirmer, I. Mporas, I. Potamitis, Evaluation of regression algorithms in residential energy consumption prediction, in: 2019 3rd Eur. Conf. Electr. Eng.
+Comput. Sci., IEEE, 2019, pp. 22–25.
+[11] K. Li, Z. Ma, D. Robinson, W. Lin, Z. Li, A data-driven strategy to forecast next-day electricity usage and peak electricity demand of a building portfolio using
+cluster analysis, Cubist regression models and Particle Swarm Optimization, J. Clean. Prod. 273 (2020), 123115.
+[12] A. Shadkam, Using SARIMAX to Forecast Electricity Demand and Consumption in University Buildings, 2020.
+[13] C. Zhang, Z. Chen, J. Zhou, Research on short-term load forecasting using K-means clustering and CatBoost integrating time series features, in: 2020 39th
+Chinese Control Conf, IEEE, 2020, pp. 6099–6104.
+[14] G. Zhang, J. Guo, A novel method for hourly electricity demand forecasting, IEEE Trans. Power Syst. 35 (2019) 1351–1363.
+[15] P.W. Khan, Y.-C. Byun, S.-J. Lee, N. Park, Machine learning based hybrid system for imputation and efficient energy demand forecasting, Energies 13 (2020)
+2681.
+[16] Z. Chen, J. Chen, C. Wang, Prediction and analysis of short-term load forecasting model based on similar day clustering and CatBoost, in: J. Phys. Conf. Ser, IOP
+Publishing, 2021, 12104.
+[17] P.W. Khan, Y. Kim, Y.-C. Byun, S.-J. Lee, Influencing factors evaluation of machine learning-based energy consumption prediction, Energies 14 (2021) 7167.
+[18] R.Z. Safarov, Z.K. Shomanova, Y.G. Nossenko, Z.G. Berdenov, Z.B. Bexeitova, A.S. Shomanov, M. Mansurova, Solving of classification problem in spatial analysis
+applying the technology of gradient boosting catboost, Folia Geogr 62 (2020) 112.
+[19] T. Fushiki, Estimation of prediction error by using K-fold cross-validation, Stat. Comput. 21 (2011) 137–146.
+[20] P. Refaeilzadeh, L. Tang, H. Liu, Cross-validation, Encycl. Database Syst. 5 (2009) 532–538.
+[21] A. Salari, H. Shakibi, A. Habibi, A. Hakkaki-Fard, Optimization of a solar-based PEM methanol/water electrolyzer using machine learning and animal-inspired
+algorithms, Energy Convers. Manag. 283 (2023), 116876.
+[22] H. Khajavi, A. Rastgoo, Improving the prediction of heating energy consumed at residential buildings using a combination of support vector regression and
+meta-heuristic algorithms, Energy (2023), 127069.
+[23] H. Khajavi, A. Rastgoo, Predicting the carbon dioxide emission caused by road transport using a Random Forest (RF) model combined by Meta-Heuristic
+algorithms, Sustain. Cities Soc. (2023), 104503.
+[24] H. Shakibi, A. Shokri, E. Assareh, M. Yari, M. Lee, Using machine learning approaches to model and optimize a combined solar/natural gas-based power and
+freshwater cogeneration system, Appl. Energy 333 (2023), 120607.
+[25] S.M. Mousavi Anzahaei, H. Nikoomaram, A comparative study of the performance of Stock trading strategies based on LGBM and CatBoost algorithms, Int. J.
+Financ. Manag. Account. 7 (2022) 63–75.
+[26] L. Prokhorenkova, G. Gusev, A. Vorobev, A.V. Dorogush, A. Gulin, CatBoost: unbiased boosting with categorical features, Adv. Neural Inf. Process. Syst. 31
+(2018).
+[27] G. Huang, L. Wu, X. Ma, W. Zhang, J. Fan, X. Yu, W. Zeng, H. Zhou, Evaluation of CatBoost method for prediction of reference evapotranspiration in humid
+regions, J. Hydrol. 574 (2019) 1029–1041.
+[28] Y. Jung, Multiple predicting K-fold cross-validation for model selection, J. Nonparametric Statistics 30 (2018) 197–215.
+[29] S. Khatsu, A. Srivastava, D.K. Das, Solving combined economic emission dispatch for microgrid using time varying phasor particle swarm optimization, in: 2020
+6th Int. Conf. Adv. Comput. Commun. Syst, IEEE, 2020, pp. 411–415.
+[30] M. Ghasemi, E. Akbari, A. Rahimnejad, S.E. Razavi, S. Ghavidel, L. Li, Phasor particle swarm optimization: a simple and efficient variant of PSO, Soft Comput. 23
+(2019) 9701–9718.
+[31] H. Shi, H. Wen, Y. Hu, L. Jiang, Reactive power minimization in bidirectional DC–DC converters using a unified-phasor-based particle swarm optimization, IEEE
+Trans. Power Electron. 33 (2018) 10990–11006.
+[32] W.-T. Pan, A new fruit fly optimization algorithm: taking the financial distress model as an example, Knowl. Base Syst. 26 (2012) 69–74.
+[33] L. Wang, Y. Shi, S. Liu, An improved fruit fly optimization algorithm and its application to joint replenishment problems, Expert Syst. Appl. 42 (2015)
+4310–4323.
+[34] Y. Zhang, G. Cui, J. Wu, W.-T. Pan, Q. He, A novel multi-scale cooperative mutation fruit fly optimization algorithm, Knowl. Base Syst. 114 (2016) 24–35.
+[35] S.H.S. Moosavi, V.K. Bardsiri, Satin bowerbird optimizer: a new optimization algorithm to optimize ANFIS for software development effort estimation, Eng.
+Appl. Artif. Intell. 60 (2017) 1–15.
+[36] M.G. Hemeida, S. Alkhalaf, T. Senjyu, A. Ibrahim, M. Ahmed, A.M. Bahaa-Eldin, Optimal probabilistic location of DGs using Monte Carlo simulation based
+different bio-inspired algorithms, Ain Shams Eng. J. 12 (2021) 2735–2762.
+[37] T. Rahkar Farshi, Battle royale optimization algorithm, Neural Comput. Appl. 33 (2021) 1139–1157.
+[38] S. Mirjalili, Moth-flame optimization algorithm: a novel nature-inspired heuristic paradigm, Knowl. Base Syst. 89 (2015) 228–249.
+[39] M. Shehab, L. Abualigah, H. Al Hamad, H. Alabool, M. Alshinwan, A.M. Khasawneh, Moth–flame optimization algorithm: variants and applications, Neural
+Comput. Appl. 32 (2020) 9859–9884.
+[40] V. Savsani, M.A. Tawhid, Non-dominated sorting moth flame optimization (NS-MFO) for multi-objective problems, Eng. Appl. Artif. Intell. 63 (2017) 20–32.
+[41] S. Mirjalili, The ant lion optimizer, Adv. Eng. Software 83 (2015) 80–98.
+[42] L.C. Saikia, N. Sinha, Automatic generation control of a multi-area system using ant lion optimizer algorithm based PID plus second order derivative controller,
+Int. J. Electr. Power Energy Syst. 80 (2016) 52–63.
+[43] M. Petrović, J. Petronijević, M. Mitić, N. Vuković, A. Plemić, Z. Miljković, B. Babić, The ant lion optimization algorithm for flexible process planning, J. Prod.
+Eng. 18 (2015) 65–68.
+[44] V.K. Kamboj, A. Bhadoria, S.K. Bath, Solution of non-convex economic load dispatch problem for small-scale power systems using ant lion optimizer, Neural
+Comput. Appl. 28 (2017) 2181–2192.
+
+18
+
+

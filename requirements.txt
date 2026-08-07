@@ -1,7 +1,0 @@
-# Core data and ML packages used by singapore_energy_forecast.ipynb
-pandas
-numpy
-requests
-matplotlib
-seaborn
-scikit-learn

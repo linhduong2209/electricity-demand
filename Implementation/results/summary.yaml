@@ -1,0 +1,8 @@
+best_mae: 1496.1831254680426
+best_model: catboost_ppso
+best_r2: 0.9135080366558982
+best_rmse: 1895.547527383831
+date_range: 2023-02-01 to 2025-12-31
+features: 16
+test_samples: 213
+train_samples: 852

@@ -1,0 +1,63 @@
+\chapter{Introduction}\label{ch:Introduction}
+\pagenumbering{arabic} \setcounter{page}{1}
+
+Electricity is a fundamental driver of modern economic activity and daily life. In densely urbanised nations such as Singapore, where the tropical climate sustains year-round cooling demand and a compact grid serves approximately 5.9 million residents, accurate short-term forecasting of electricity demand is essential for reliable grid operation, cost-effective generation scheduling, and long-term infrastructure planning \parencite{ema2025statistics}. This chapter introduces the research context, states the problem addressed by this project, defines the objectives, and outlines the structure of the remaining chapters.
+
+
+\section{Background and Motivation}
+
+Global energy consumption has risen steadily over the past decades, driven by population growth, urbanisation, industrial expansion, and the proliferation of electrical appliances \parencite{ringkjob2018review}. Singapore, as a city-state with no indigenous fossil-fuel resources, imports virtually all of its primary energy and converts a substantial share into electricity. The Energy Market Authority (EMA) reported that national electricity consumption exceeded 55 TWh in 2024, with the residential and commercial sectors collectively accounting for the majority of the load \parencite{ema2025statistics}.
+
+Unlike temperate regions where heating demand dominates winter consumption, Singapore's equatorial climate produces a near-constant ambient temperature of 25--32$^\circ$C and relative humidity of 70--90\%. Air-conditioning therefore represents the single largest end-use of electricity in buildings, making demand highly sensitive to even small variations in temperature and humidity \parencite{zhao2012review}. Public holidays, weekends, and monsoon seasons introduce additional variability that compounds the weather effect.
+
+Accurate demand forecasting allows grid operators to schedule generation units efficiently, minimise spinning reserves, negotiate fuel contracts, and defer capital-intensive capacity additions. Conversely, persistent forecast errors lead to over-generation losses, increased reliance on expensive peaking plants, or, in extreme cases, load shedding. The economic and operational consequences underscore the need for forecasting models that capture the complex, non-linear interactions between meteorological conditions and electricity demand.
+
+
+\section{Problem Statement}
+
+Traditional demand-forecasting approaches---including exponential smoothing, ARIMA, and simple regression---assume linear or stationary relationships between predictors and load. These methods perform adequately when consumption patterns are stable and the number of explanatory variables is small. However, Singapore's electricity demand is shaped by a combination of weather variables (temperature, humidity, solar radiation, wind speed), temporal patterns (day-of-week, month, season, public holidays), and autoregressive dynamics (recent demand levels). The interactions among these factors are inherently non-linear and time-varying, rendering classical statistical methods insufficient for high-accuracy short-term forecasting \parencite{almusaylh2018forecasting}.
+
+Machine learning models---such as Random Forest, XGBoost, and CatBoost---are well suited to capturing these non-linear relationships but introduce the challenge of hyperparameter tuning. The predictive performance of gradient-boosted tree models is known to be sensitive to choices such as tree depth, learning rate, number of iterations, and regularisation strength. Manual or grid-search tuning is computationally expensive and may converge to sub-optimal configurations.
+
+Zhang et al.\ \parencite{zhang2023catboostppso} demonstrated that combining CatBoost with a Phasor Particle Swarm Optimisation (PPSO) algorithm yields superior forecasting accuracy compared to CatBoost paired with five other meta-heuristic optimisers. However, their study was conducted on hourly residential data from a single customer in a different climate context. The extent to which this hybrid approach generalises to daily national-level demand in a tropical setting remains unexplored.
+
+
+\section{Research Objectives}
+
+This project addresses the identified gaps by pursuing the following objectives:
+
+\begin{enumerate}
+    \item \textbf{Data Integration}: Construct a comprehensive daily dataset for Singapore by merging electricity demand records from EMA with weather observations from the Open-Meteo historical weather API, spanning February 2023 to December 2025.
+    \item \textbf{Feature Engineering}: Design a feature set that captures weather conditions, derived comfort indices, temporal patterns, and autoregressive demand dynamics.
+    \item \textbf{Comparative Modelling}: Train and evaluate eight model configurations---a Lag-1 baseline, Linear Regression, Random Forest, XGBoost, and CatBoost, plus PPSO-tuned variants of each tree-based model---under a consistent chronological train/test split and an identical PPSO optimisation budget.
+    \item \textbf{Hyperparameter Optimisation}: Implement the PPSO meta-heuristic to automatically tune the hyperparameters of CatBoost and assess the performance gain relative to default and standard CatBoost.
+    \item \textbf{Comprehensive Evaluation}: Compare all models using six statistical metrics (MAE, RMSE, $R^2$, MAPE, RAE, and Willmott Index) and analyse feature importance to identify the most influential predictors of electricity demand.
+    \item \textbf{Interactive Dashboard}: Develop a web-based dashboard that visualises the historical demand data and exposes the best-performing trained model through a simple date-based prediction interface for non-technical users.
+\end{enumerate}
+
+
+\section{Scope and Limitations}
+
+The scope of this project is limited to \emph{daily} electricity demand forecasting at the \emph{national} level for Singapore. The study does not address intra-day (hourly or sub-hourly) forecasting, sector-specific demand decomposition, or real-time operational deployment. Weather data is obtained retrospectively from the Open-Meteo archive rather than from a live forecasting service; consequently, the pipeline evaluates model accuracy on historical data rather than genuine out-of-sample future predictions.
+
+The CatBoost-PPSO implementation in this project follows the methodology proposed by Zhang et al.\ \parencite{zhang2023catboostppso} with adaptations for daily resolution and the Singapore context. Deep learning approaches (e.g.\ LSTM, Transformer) are outside the scope of this comparative study, although they are discussed in the literature review for completeness.
+
+
+\section{Chapter Overview}
+
+The remainder of this report is organised as follows:
+
+\textbf{Chapter~\ref{ch:Background}} \emph{Background Research.} Reviews the literature on electricity demand forecasting, the CatBoost algorithm, and phasor particle swarm optimisation.
+
+\textbf{Chapter~\ref{ch:Design}} \emph{Design.} Presents the overall system architecture, data acquisition strategy, feature engineering design, and the rationale for model selection.
+
+\textbf{Chapter~\ref{ch:Implementation}} \emph{Implementation.} Describes the technical implementation of the data pipeline, preprocessing modules, model training, and PPSO-based hyperparameter tuning.
+
+\textbf{Chapter~\ref{ch:Evaluation}} \emph{Evaluation \& Testing.} Reports experimental results, model comparison, feature importance analysis, and discusses the findings.
+
+\textbf{Chapter~\ref{ch:Conclusion}} \emph{Conclusion.} Summarises the key contributions, identifies limitations, and suggests directions for future research.
+
+
+\section{Conclusion}
+
+This chapter has established the motivation for weather-driven electricity demand forecasting in Singapore, articulated the research problem, and defined five concrete objectives. The following chapter examines the theoretical and empirical background underlying the methods employed in this project.

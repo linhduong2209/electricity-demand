@@ -1,0 +1,6 @@
+Implementation/electricity-demand/
+node_modules/
+dist/
+.vite/
+__pycache__/
+.DS_Store

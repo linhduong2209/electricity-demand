@@ -1,0 +1,7 @@
+\section{Discussion}\label{sec:discussion}
+
+\textbf{Interpretation.} Three conclusions emerge beyond raw rankings. First, hyperparameter optimisation is \emph{not} universally beneficial: PPSO helped the gradient-boosted models, whose performance hinges on learning rate and regularisation, but not Random Forest, whose bagging mechanism is robust to hyperparameters and where tuning instead overfitted the cross-validation folds. Reporting only a tuned flagship model---as is common in the literature---would have concealed this. Second, the strength of Linear Regression shows that autoregressive features carry most of the daily-resolution signal; the value of non-linear models lies in weather--calendar interactions, precisely where CatBoost's categorical handling helps. Third, time-series cross-validation inside the PPSO fitness function was essential: random K-fold produced optimistic fitness values that did not transfer to the test period.
+
+\textbf{Limitations.} Daily aggregation masks intra-day peaks; Open-Meteo reanalysis data may deviate from station measurements; external shocks (economic events, policy changes) are not modelled; PPSO is stochastic and results reflect a single seeded run; multi-day portal forecasts inherit upstream weather-forecast error.
+
+\textbf{Future work.} Hourly resolution with intra-day features; multi-seed PPSO runs with significance testing; sequence models (LSTM, Transformer) under the same fair-tuning protocol; online retraining in the deployed portal.
